@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Settings/">
+    <File Path="appsettings.Development.json" />
+    <File Path="appsettings.json" />
+  </Folder>
+  <Project Path="API/API.csproj" />
+  <Project Path="Bot/Bot.csproj" Id="b4872283-8546-4997-8f54-995ac0ca5304" />
+  <Project Path="PainelDeControle/PainelDeControle.csproj" Id="cbc95000-76eb-49d3-a532-197a7e80ab4c" />
+</Solution>

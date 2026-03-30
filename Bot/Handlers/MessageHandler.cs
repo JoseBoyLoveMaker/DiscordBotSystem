@@ -1,0 +1,171 @@
+﻿using Discord;
+using Discord.WebSocket;
+
+public class MessageHandler
+{
+    private readonly MongoHandler _mongo;
+
+    private readonly TopCommand _topCommand;
+    private readonly RankCommand _rankCommand;
+    private readonly RollCommand _rollCommand;
+    private readonly MathCommand _mathCommand;
+    private readonly EldenCommand _eldenCommand;
+
+    private readonly Dictionary<string, DateTime> chatCooldown = new();
+    private readonly Random rand = new();
+
+    public MessageHandler(MongoHandler mongo)
+    {
+        _mongo = mongo;
+
+        _topCommand = new TopCommand(_mongo);
+        _rankCommand = new RankCommand(_mongo);
+        _rollCommand = new RollCommand();
+        _mathCommand = new MathCommand();
+        _eldenCommand = new EldenCommand(_mongo);
+    }
+
+    private string GetChatKey(ulong guildId, ulong userId)
+    {
+        return $"{guildId}_{userId}";
+    }
+
+    public async Task HandleAsync(SocketMessage message)
+    {
+        try
+        {
+            if (message.Author.IsBot)
+                return;
+
+            if (message.Channel is not SocketGuildChannel guildChannel)
+                return;
+
+            var guild = guildChannel.Guild;
+
+            string content = message.Content.Trim();
+
+            if (string.IsNullOrWhiteSpace(content))
+                return;
+
+            string lowerContent = content.ToLower();
+
+            var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return;
+
+            string firstWord = parts[0].ToLower();
+            string commandInput = firstWord.StartsWith("!") ? firstWord.Substring(1) : firstWord;
+
+            Console.WriteLine($"Mensagem detectada: {message.Author.Username} -> {content}");
+
+            ulong guildId = guild.Id;
+            ulong userId = message.Author.Id;
+            string userName = message.Author.Username;
+
+            await _mongo.GuildUserService.GetOrCreateUser(guildId, userId, userName);
+
+            CommandConfig? resolvedCommand = await _mongo.CommandService.ResolveCommand(guild.Id, commandInput);
+
+            if (resolvedCommand != null)
+            {
+                switch (resolvedCommand.CommandName.ToLower())
+                {
+                    case "top":
+                        await _topCommand.ExecuteTopAsync(message, guild);
+                        return;
+
+                    case "toptxt":
+                        await _topCommand.ExecuteTopTxtAsync(message, guild);
+                        return;
+
+                    case "topvoz":
+                        await _topCommand.ExecuteTopVozAsync(message, guild);
+                        return;
+
+                    case "rank":
+                        await _rankCommand.ExecuteAsync(message);
+                        return;
+
+                    case "elden":
+                        await _eldenCommand.ExecuteAsync(message);
+                        return;
+
+                    case "roll":
+                        {
+                            string expr = content.Substring(parts[0].Length).Trim();
+
+                            if (string.IsNullOrWhiteSpace(expr))
+                            {
+                                await message.Channel.SendMessageAsync("Use o comando com uma expressão. Exemplo: `q 1d20+5`");
+                                return;
+                            }
+
+                            if (System.Text.RegularExpressions.Regex.IsMatch(expr.ToLower(), @"^[\dd+\-*/().#!^z%a ]+$"))
+                            {
+                                await _rollCommand.ExecuteAsync(message);
+                                return;
+                            }
+
+                            await message.Channel.SendMessageAsync("Expressão de dado inválida.");
+                            return;
+                        }
+
+                    case "math":
+                        {
+                            string expr = content.Substring(parts[0].Length).Trim();
+
+                            if (string.IsNullOrWhiteSpace(expr))
+                            {
+                                await message.Channel.SendMessageAsync("Use o comando com uma expressão. Exemplo: `a 2+2*5`");
+                                return;
+                            }
+
+                            if (System.Text.RegularExpressions.Regex.IsMatch(expr.ToLower(), @"^[\dd+\-*/().#!^z%a ]+$"))
+                            {
+                                await _mathCommand.ExecuteAsync(message);
+                                return;
+                            }
+
+                            await message.Channel.SendMessageAsync("Expressão matemática inválida.");
+                            return;
+                        }
+                }
+            }
+
+            if (content.Length >= 5 && content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length >= 2)
+            {
+                string chatKey = GetChatKey(guildId, userId);
+
+                if (!chatCooldown.TryGetValue(chatKey, out DateTime cooldown) || cooldown < DateTime.UtcNow)
+                {
+                    int xp = rand.Next(15, 26);
+
+                    bool levelUp = await _mongo.GuildUserService.AddChatXp(guildId, userId, userName, xp);
+
+                    chatCooldown[chatKey] = DateTime.UtcNow.AddSeconds(30);
+
+                    Console.WriteLine($"+{xp} ChatXP para {userName} no servidor {guild.Name}");
+
+                    if (levelUp)
+                    {
+                        var guildUser = await _mongo.GuildUserService.GetOrCreateUser(guildId, userId, userName);
+
+                        await message.Channel.SendMessageAsync(
+                            $"🎉 {message.Author.Mention} subiu para o nível **{guildUser.ChatLevel}** de chat!"
+                        );
+                    }
+                }
+            }
+
+            var reply = await _mongo.ResponseService.GetRandomResponse(content);
+
+            if (reply != null)
+                await message.Channel.SendMessageAsync(reply);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Erro no MessageHandler:");
+            Console.WriteLine(ex);
+        }
+    }
+}

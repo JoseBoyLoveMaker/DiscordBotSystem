@@ -1,0 +1,103 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+```html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Bot</title>
+
+    <link rel="stylesheet" href="site.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- MENU LATERAL -->
+        <aside class="sidebar">
+
+            <h2 class="logo">AHET</h2>
+
+            <nav>
+                <ul>
+                    <li><a href="#">Dashboard</a></li>
+                    <li><a href="#">Servidores</a></li>
+                    <li><a href="#">Economia</a></li>
+                    <li><a href="#">XP</a></li>
+                    <li><a href="#">Moderação</a></li>
+                    <li><a href="#">Logs</a></li>
+                    <li><a href="#">Configurações</a></li>
+                </ul>
+            </nav>
+
+        </aside>
+
+
+        <!-- CONTEÚDO -->
+        <main class="main">
+
+            <!-- BARRA SUPERIOR -->
+            <header class="topbar">
+
+                <div class="server">
+                    Servidor: Meu Servidor
+                </div>
+
+                <div class="user">
+                    Emanuel
+                </div>
+
+            </header>
+
+
+            <!-- ÁREA PRINCIPAL -->
+            <section class="content">
+
+                <h1>Dashboard</h1>
+
+                <div class="cards">
+
+                    <div class="card">
+                        <h3>Usuários</h3>
+                        <p>152</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Saldo Total</h3>
+                        <p>54.320</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Comandos Hoje</h3>
+                        <p>1.204</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Status do Bot</h3>
+                        <p>Online</p>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+```

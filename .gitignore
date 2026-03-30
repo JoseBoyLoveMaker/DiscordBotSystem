@@ -1,0 +1,19 @@
+# Build
+bin/
+obj/
+**/Settings/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Configs locais (IMPORTANTE)
+appsettings.Development.json
+
+# Outros
+*.cache
+*.pdb

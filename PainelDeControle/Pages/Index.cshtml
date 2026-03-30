@@ -1,0 +1,70 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<link rel="stylesheet" href="~/css/site.css">
+    <script src="~/js/script.js" defer></script>
+
+
+
+    <header class="topbar">
+        <button id="menu-toggle">☰</button>
+    </header>
+
+    <div id="sidebar" class="sidebar">
+
+        <div class="sidebar-header">
+            <h2>BOT PANEL</h2>
+            <button id="closemenu" onclick="fecharMenu()">✖</button>
+        </div>
+        s
+        <nav class="sidebar-menu">
+            <a href="#" id="btn-dashboard" class="active">🏠 Dashboard</a>
+            <a href="#" id="btn-servidor">🖥️ Servidor</a>
+            <a href="#" id="btn-comandos">⚡ Comandos</a>
+            <a href="#">💰 Economia</a>
+            <a href="#">⭐ Regras</a>
+            <a href="#">🛡️ Moderação</a>
+            <a href="#">📜 Logs</a>
+            <a href="#">⚙️ Configurações</a>
+        </nav>
+
+    </div>
+
+    <section id="main-content" class="content">
+        <h1>Dashboard</h1>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>👥 Usuários</h3>
+                <p id="users">0</p>
+            </div>
+
+            <div class="card">
+                <h3>✨ XP Total</h3>
+                <p id="xp">0</p>
+            </div>
+
+            <div class="card status">
+                <h3>📡 Status</h3>
+                <p id="status">Carregando...</p>
+            </div>
+        </div>
+    </section>
+
+
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Tem certeza?</h3>
+            <p>Essa ação não pode ser desfeita.</p>
+
+            <div id="delete-preview" class="delete-preview"></div>
+
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-delete" id="confirm-delete">Deletar</button>
+            </div>
+        </div>
+    </div>
