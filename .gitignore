@@ -1,19 +1,30 @@
 # Build
 bin/
 obj/
-**/Settings/
+**/bin/
+**/obj/
 
 # Visual Studio
 .vs/
 *.user
 *.suo
+*.cache
+*.pdb
 
 # Logs
 *.log
 
-# Configs locais (IMPORTANTE)
+# Configs sensíveis
+appsettings.json
 appsettings.Development.json
+appsettings.*.json
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.*.json
 
-# Outros
-*.cache
-*.pdb
+# Pasta Settings em qualquer projeto
+**/Settings/
+
+# Arquivos de exemplo podem subir
+!**/appsettings.Modelo.json
+!**/appsettings.example.json
