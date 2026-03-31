@@ -803,6 +803,34 @@ body {
     align-items: start;
 }
 
+/* ===== RESPONSIVO ===== */
+
+@media (max-width: 1200px) {
+    .trigger-details-card .trigger-responses.trigger-responses-details {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .trigger-details-card .trigger-responses.trigger-responses-details {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 700px) {
+    .trigger-details-card .trigger-responses.trigger-responses-details {
+        grid-template-columns: 1fr !important;
+    }
+
+    .trigger-details-card .response-row.response-row-details {
+        min-height: auto !important;
+    }
+
+    .trigger-details-card .response-edit-box {
+        max-height: none !important;
+    }
+}
+
 .response-row.response-row-details {
     display: flex;
     flex-direction: column;
@@ -829,4 +857,46 @@ body {
     padding: 18px;
     padding-right: 56px;
 }
+
+/* ===== FORÇAR GRID DE 4 COLUNAS NA TELA DE DETALHES ===== */
+
+.trigger-details-card .trigger-responses.trigger-responses-details {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    align-items: start !important;
+    margin-top: 12px !important;
 }
+
+.trigger-details-card .response-row.response-row-details {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    min-height: 170px !important;
+    padding: 12px !important;
+    width: 100% !important;
+}
+
+.trigger-details-card .response-row.response-row-details .response-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-self: flex-end !important;
+}
+
+.trigger-details-card .response-edit-box {
+    width: 100% !important;
+    min-height: 110px !important;
+    max-height: 170px !important;
+    resize: vertical !important;
+    overflow-y: auto !important;
+    font-size: 14px !important;
+    line-height: 1.45 !important;
+    box-sizing: border-box !important;
+}
+
+.trigger-details-card {
+    padding: 18px !important;
+    padding-right: 56px !important;
+}
+
