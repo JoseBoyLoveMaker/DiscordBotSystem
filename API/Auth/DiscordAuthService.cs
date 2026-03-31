@@ -20,6 +20,15 @@ public class DiscordAuthService
 
     public string GetLoginUrl(string state)
     {
+        if (string.IsNullOrWhiteSpace(_settings.ClientId))
+            throw new Exception("DiscordOAuth.ClientId está vazio.");
+
+        if (string.IsNullOrWhiteSpace(_settings.RedirectUri))
+            throw new Exception("DiscordOAuth.RedirectUri está vazio.");
+
+        if (string.IsNullOrWhiteSpace(state))
+            throw new Exception("State do OAuth está vazio.");
+
         var scopes = "identify guilds";
 
         var query = new Dictionary<string, string>
@@ -28,14 +37,16 @@ public class DiscordAuthService
             ["response_type"] = "code",
             ["redirect_uri"] = _settings.RedirectUri,
             ["scope"] = scopes,
-            ["state"] = state,
-            ["prompt"] = "none"
+            ["state"] = state
         };
 
         var queryString = string.Join("&",
             query.Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
 
-        return $"{AuthorizeUrl}?{queryString}";
+        var url = $"{AuthorizeUrl}?{queryString}";
+        Console.WriteLine("Discord login URL gerada: " + url);
+
+        return url;
     }
 
     public async Task<DiscordTokenResponse> ExchangeCodeAsync(string code, CancellationToken cancellationToken = default)
