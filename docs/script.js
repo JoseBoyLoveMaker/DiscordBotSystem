@@ -1,5 +1,5 @@
 const LOCAL_API_BASE = "https://localhost:7229";
-const PROD_API_BASE = "https://SEU-DOMINIO-DA-API.up.railway.apphttps://discordbotsystem-production.up.railway.app/auth/discord/callback";
+const PROD_API_BASE = "https://discordbotsystem-production.up.railway.app/";
 
 const API_BASE =
     window.location.hostname === "localhost" ||
