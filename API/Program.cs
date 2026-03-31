@@ -52,9 +52,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Painel", policy =>
     {
         policy
-            .WithOrigins(
-                "https://joseboylovemaker.github.io/DiscordBotSystem/"
-            )
+            .WithOrigins("https://joseboylovemaker.github.io")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
