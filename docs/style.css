@@ -487,7 +487,7 @@ body {
     white-space: nowrap;
 }
 
-/* TRIGGERS */
+/* TRIGGERS / RESPONSES */
 .server-page-actions {
     padding: 0 20px;
 }
@@ -524,6 +524,13 @@ body {
     margin-bottom: 14px;
 }
 
+.trigger-header-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 8px;
+}
+
 .trigger-title {
     margin: 0;
     padding-right: 8px;
@@ -531,6 +538,13 @@ body {
     font-size: 18px !important;
     font-weight: 700;
     word-break: break-word;
+}
+
+.trigger-count {
+    margin: 0;
+    font-size: 13px !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
 }
 
 .trigger-delete-btn {
@@ -549,6 +563,7 @@ body {
     justify-content: center;
     font-size: 14px;
     transition: 0.2s;
+    z-index: 2;
 }
 
 .trigger-delete-btn:hover {
@@ -556,19 +571,77 @@ body {
     transform: scale(1.05);
 }
 
-.add-response-box {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 16px;
+.trigger-list-card {
+    min-height: 120px;
+    justify-content: flex-start;
 }
 
-.new-response-textarea {
-    background: #0f172a;
-    border: 1px solid #334155;
+.trigger-open-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    display: block;
+}
+
+.trigger-open-btn:hover .trigger-title {
+    color: #38bdf8 !important;
+}
+
+.trigger-open-btn:hover .trigger-count {
+    color: #cbd5e1 !important;
+}
+
+.trigger-open-btn:focus {
+    outline: none;
+}
+
+.trigger-open-btn:focus-visible {
+    outline: 2px solid #38bdf8;
+    outline-offset: 6px;
     border-radius: 10px;
-    padding: 10px 12px;
-    min-height: 70px;
+}
+
+.trigger-details-top {
+    padding: 0 20px;
+    margin-bottom: 12px;
+}
+
+.back-btn {
+    border: none;
+    background: #334155;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: 0.2s;
+}
+
+.back-btn:hover {
+    background: #475569;
+}
+
+.trigger-details-content {
+    padding: 0 20px 20px 20px;
+}
+
+.trigger-details-card {
+    padding: 22px;
+    padding-top: 22px;
+    padding-right: 64px;
+}
+
+.trigger-details-title {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 30px;
+    line-height: 1.2;
+    word-break: break-word;
 }
 
 .trigger-responses {
@@ -576,6 +649,11 @@ body {
     flex-direction: column;
     gap: 10px;
     margin-top: 8px;
+}
+
+.trigger-responses-details {
+    margin-top: 12px;
+    gap: 14px;
 }
 
 .response-row {
@@ -588,10 +666,28 @@ body {
     padding: 10px;
 }
 
+.response-row-details {
+    padding: 14px;
+    border-radius: 12px;
+}
+
 .response-row .edit-box {
     flex: 1;
     min-height: 60px;
     background: transparent;
+}
+
+.response-edit-box {
+    min-height: 110px !important;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.response-edit-box:focus {
+    outline: none;
 }
 
 .response-actions {
@@ -599,21 +695,6 @@ body {
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
-}
-
-.save-response-btn {
-    border: none;
-    background: #38bdf8;
-    color: #020617;
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.save-response-btn:hover {
-    filter: brightness(1.08);
 }
 
 .mini-delete-btn {
@@ -640,16 +721,62 @@ body {
     font-weight: normal !important;
 }
 
-.trigger-header-main {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-right: 8px;
+/* RESPONSIVO */
+@media (max-width: 900px) {
+    .topbar {
+        gap: 12px;
+    }
+
+    .topbar-right {
+        margin-left: 20px;
+    }
+
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
 }
 
-.trigger-count {
-    margin: 0;
-    font-size: 13px !important;
-    color: #94a3b8 !important;
-    font-weight: 600 !important;
+@media (max-width: 700px) {
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .topbar-left,
+    .topbar-right {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .topbar-right {
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .servers-strip-wrapper {
+        margin-left: 16px;
+    }
+
+    .trigger-create-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .trigger-input,
+    .secondary-btn {
+        width: 100%;
+    }
+
+    .response-row,
+    .response-row-details {
+        flex-direction: column;
+    }
+
+    .response-actions {
+        align-self: flex-end;
+    }
+
+    .trigger-details-title {
+        font-size: 24px;
+    }
 }

@@ -305,7 +305,7 @@ function carregarServidor() {
     }
 
     content.innerHTML = `
-        <h1>Triggers</h1>
+        <h1>Responses</h1>
 
         <div class="server-page-actions">
             <div class="trigger-create-box">
@@ -372,22 +372,105 @@ function criarCardTrigger(item) {
     const responses = Array.isArray(item.responses) ? item.responses : [];
     const totalResponses = responses.length;
 
+    return `
+        <div class="card trigger-card trigger-list-card">
+            <button
+                class="trigger-delete-btn"
+                title="Excluir trigger"
+                onclick="abrirModalExcluirTrigger('${escaparJs(item.trigger)}')">
+                🗑️
+            </button>
+
+            <button
+                type="button"
+                class="trigger-open-btn"
+                onclick="abrirDetalhesTrigger('${escaparJs(item.trigger)}')">
+                <div class="trigger-header">
+                    <div class="trigger-header-main">
+                        <h3 class="trigger-title">${escaparHtml(item.trigger)}</h3>
+                        <p class="trigger-count">${totalResponses} response${totalResponses === 1 ? "" : "s"}</p>
+                    </div>
+                </div>
+            </button>
+        </div>
+    `;
+}
+
+async function abrirDetalhesTrigger(trigger) {
+    const content = document.getElementById("main-content");
+    if (!content || !getServerId()) return;
+
+    content.innerHTML = `
+        <div class="trigger-details-top">
+            <button class="back-btn" onclick="carregarServidor()">← Voltar</button>
+        </div>
+
+        <div id="trigger-details-content" class="trigger-details-content">
+            <div class="card">
+                <p>Carregando responses...</p>
+            </div>
+        </div>
+
+        <div id="delete-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3 id="delete-modal-title">Excluir</h3>
+                <p id="delete-modal-message">Tem certeza?</p>
+
+                <div id="delete-preview" class="delete-preview"></div>
+
+                <div class="modal-buttons">
+                    <button class="btn-cancel" onclick="fecharModalExcluir()">Cancelar</button>
+                    <button class="btn-delete" onclick="confirmarExclusao()">Excluir</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    try {
+        const data = await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses`);
+        const item = data.find(x => String(x.trigger) === String(trigger));
+
+        const container = document.getElementById("trigger-details-content");
+        if (!container) return;
+
+        if (!item) {
+            container.innerHTML = `
+                <div class="card">
+                    <h3>Trigger não encontrada</h3>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = criarDetalhesTrigger(item);
+        configurarAutoSaveResponses(item.trigger, item.responses || []);
+    } catch (err) {
+        console.error("Erro ao abrir detalhes da trigger:", err);
+        const container = document.getElementById("trigger-details-content");
+        if (container) {
+            container.innerHTML = `
+                <div class="card">
+                    <p>Erro ao carregar responses da trigger.</p>
+                </div>
+            `;
+        }
+    }
+}
+
+function criarDetalhesTrigger(item) {
+    const responses = Array.isArray(item.responses) ? item.responses : [];
+    const totalResponses = responses.length;
+
     const respostasHtml = responses.length
         ? responses.map((resp, index) => `
-            <div class="response-row">
+            <div class="response-row response-row-details">
                 <textarea
                     id="response-${escaparHtml(item.trigger)}-${index}"
-                    class="edit-box"
-                    rows="2">${escaparHtml(resp)}</textarea>
+                    class="edit-box response-edit-box"
+                    rows="3"
+                    data-original="${escaparHtml(resp)}">${escaparHtml(resp)}</textarea>
 
                 <div class="response-actions">
-                    <button
-                        class="save-response-btn"
-                        title="Salvar edição"
-                        onclick="editarResponse('${escaparJs(item.trigger)}', ${index})">
-                        Salvar
-                    </button>
-
                     <button
                         class="mini-delete-btn"
                         title="Excluir resposta"
@@ -400,7 +483,7 @@ function criarCardTrigger(item) {
         : `<p class="empty-text">Nenhuma response cadastrada para esta trigger.</p>`;
 
     return `
-        <div class="card trigger-card">
+        <div class="card trigger-details-card">
             <button
                 class="trigger-delete-btn"
                 title="Excluir trigger"
@@ -410,16 +493,53 @@ function criarCardTrigger(item) {
 
             <div class="trigger-header">
                 <div class="trigger-header-main">
-                    <h3 class="trigger-title">${escaparHtml(item.trigger)}</h3>
+                    <h1 class="trigger-details-title">${escaparHtml(item.trigger)}</h1>
                     <p class="trigger-count">${totalResponses} response${totalResponses === 1 ? "" : "s"}</p>
                 </div>
             </div>
 
-            <div class="trigger-responses">
+            <div class="trigger-responses trigger-responses-details">
                 ${respostasHtml}
             </div>
         </div>
     `;
+}
+
+function configurarAutoSaveResponses(trigger, responses) {
+    responses.forEach((resp, index) => {
+        const textarea = document.getElementById(`response-${trigger}-${index}`);
+        if (!textarea) return;
+
+        textarea.addEventListener("blur", async () => {
+            const valorAtual = textarea.value.trim();
+            const valorOriginal = (textarea.dataset.original || "").trim();
+
+            if (!valorAtual || valorAtual === valorOriginal) {
+                textarea.value = valorOriginal;
+                return;
+            }
+
+            textarea.disabled = true;
+
+            try {
+                await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}/${index}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(valorAtual)
+                });
+
+                textarea.dataset.original = valorAtual;
+            } catch (err) {
+                console.error("Erro ao editar response:", err);
+                textarea.value = valorOriginal;
+                alert("Erro ao salvar a response.");
+            } finally {
+                textarea.disabled = false;
+            }
+        });
+    });
 }
 
 async function criarTrigger() {
@@ -450,34 +570,6 @@ async function criarTrigger() {
     }
 }
 
-async function adicionarResponse(trigger) {
-    const textarea = document.getElementById(`new-response-${trigger}`);
-    if (!textarea) return;
-
-    const nova = textarea.value.trim();
-
-    if (!nova) {
-        alert("Digite uma resposta válida.");
-        return;
-    }
-
-    try {
-        await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(nova)
-        });
-
-        textarea.value = "";
-        await carregarListaTriggers();
-    } catch (err) {
-        console.error("Erro ao adicionar response:", err);
-        alert("Erro ao adicionar response.");
-    }
-}
-
 async function editarResponse(trigger, index) {
     const textarea = document.getElementById(`response-${trigger}-${index}`);
     if (!textarea) return;
@@ -497,8 +589,6 @@ async function editarResponse(trigger, index) {
             },
             body: JSON.stringify(nova)
         });
-
-        await carregarListaTriggers();
     } catch (err) {
         console.error("Erro ao editar response:", err);
         alert("Erro ao editar response.");
@@ -574,6 +664,9 @@ async function confirmarExclusao() {
                     method: "DELETE"
                 }
             );
+
+            carregarServidor();
+            return;
         }
 
         if (deleteData.type === "response") {
@@ -583,9 +676,10 @@ async function confirmarExclusao() {
                     method: "DELETE"
                 }
             );
-        }
 
-        await carregarListaTriggers();
+            await abrirDetalhesTrigger(deleteData.trigger);
+            return;
+        }
     } catch (err) {
         console.error("Erro ao excluir:", err);
         alert("Erro ao excluir.");
