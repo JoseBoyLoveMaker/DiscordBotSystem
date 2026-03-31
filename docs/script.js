@@ -100,7 +100,19 @@ async function verificarSessao() {
     }
 }
 
+let loginIniciado = false;
+
 function iniciarLoginDiscord() {
+    if (loginIniciado) return;
+
+    loginIniciado = true;
+
+    const loginBtn = document.getElementById("login-btn");
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Entrando...";
+    }
+
     window.location.href = `${API_BASE}/auth/discord/login`;
 }
 
@@ -833,7 +845,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnServidor = document.getElementById("btn-servidor");
     const btnComandos = document.getElementById("btn-comandos");
 
-    if (loginBtn) loginBtn.addEventListener("click", iniciarLoginDiscord);
+    if (loginBtn) {
+    loginBtn.onclick = iniciarLoginDiscord;
+    }
     if (logoutBtn) logoutBtn.addEventListener("click", logout);
     if (inviteBotBtn) inviteBotBtn.addEventListener("click", adicionarBotAoServidor);
 
