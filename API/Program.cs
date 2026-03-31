@@ -2,17 +2,15 @@ using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Limpa as fontes padrão e carrega os appsettings da pasta Settings
-builder.Configuration.Sources.Clear();
-
 builder.Configuration
-    .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("Settings/appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile(
         $"Settings/appsettings.{builder.Environment.EnvironmentName}.json",
         optional: true,
         reloadOnChange: true)
     .AddEnvironmentVariables();
+
+Console.WriteLine("ClientId raw: " + builder.Configuration["DiscordOAuth:ClientId"]);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
