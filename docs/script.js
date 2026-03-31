@@ -319,20 +319,6 @@ function carregarServidor() {
         </div>
 
         <div id="triggers-list" class="dashboard"></div>
-
-        <div id="delete-modal" class="modal hidden">
-            <div class="modal-content">
-                <h3 id="delete-modal-title">Excluir</h3>
-                <p id="delete-modal-message">Tem certeza?</p>
-
-                <div id="delete-preview" class="delete-preview"></div>
-
-                <div class="modal-buttons">
-                    <button class="btn-cancel" onclick="fecharModalExcluir()">Cancelar</button>
-                    <button class="btn-delete" onclick="confirmarExclusao()">Excluir</button>
-                </div>
-            </div>
-        </div>
     `;
 
     carregarListaTriggers();
@@ -401,9 +387,10 @@ function criarCardTrigger(item) {
     return `
         <div class="card trigger-card trigger-list-card">
             <button
+                type="button"
                 class="trigger-delete-btn"
                 title="Excluir trigger"
-                onclick="abrirModalExcluirTrigger('${escaparJs(item.trigger)}')">
+                onclick="event.stopPropagation(); abrirModalExcluirTrigger('${escaparJs(item.trigger)}')">
                 🗑️
             </button>
 
@@ -434,20 +421,6 @@ async function abrirDetalhesTrigger(trigger) {
         <div id="trigger-details-content" class="trigger-details-content">
             <div class="card">
                 <p>Carregando responses...</p>
-            </div>
-        </div>
-
-        <div id="delete-modal" class="modal hidden">
-            <div class="modal-content">
-                <h3 id="delete-modal-title">Excluir</h3>
-                <p id="delete-modal-message">Tem certeza?</p>
-
-                <div id="delete-preview" class="delete-preview"></div>
-
-                <div class="modal-buttons">
-                    <button class="btn-cancel" onclick="fecharModalExcluir()">Cancelar</button>
-                    <button class="btn-delete" onclick="confirmarExclusao()">Excluir</button>
-                </div>
             </div>
         </div>
     `;
@@ -499,9 +472,10 @@ function criarDetalhesTrigger(item) {
 
                 <div class="response-actions">
                     <button
+                        type="button"
                         class="mini-delete-btn"
                         title="Excluir resposta"
-                        onclick="abrirModalExcluirResponse('${escaparJs(item.trigger)}', ${index}, '${escaparJs(resp)}')">
+                        onclick="event.stopPropagation(); abrirModalExcluirResponse('${escaparJs(item.trigger)}', ${index}, '${escaparJs(resp)}')">
                         🗑️
                     </button>
                 </div>
@@ -512,9 +486,10 @@ function criarDetalhesTrigger(item) {
     return `
         <div class="card trigger-details-card">
             <button
+                type="button"
                 class="trigger-delete-btn"
                 title="Excluir trigger"
-                onclick="abrirModalExcluirTrigger('${escaparJs(item.trigger)}')">
+                onclick="event.stopPropagation(); abrirModalExcluirTrigger('${escaparJs(item.trigger)}')">
                 🗑️
             </button>
 
@@ -522,6 +497,23 @@ function criarDetalhesTrigger(item) {
                 <div class="trigger-header-main">
                     <h1 class="trigger-details-title">${escaparHtml(item.trigger)}</h1>
                     <p class="trigger-count">${totalResponses} response${totalResponses === 1 ? "" : "s"}</p>
+                </div>
+            </div>
+
+            <div class="add-response-box details-add-response-box">
+                <textarea
+                    id="new-response-${escaparHtml(item.trigger)}"
+                    class="edit-box new-response-textarea"
+                    rows="3"
+                    placeholder="Digite uma nova response para esta trigger"></textarea>
+
+                <div class="add-response-actions">
+                    <button
+                        type="button"
+                        class="secondary-btn"
+                        onclick="adicionarResponse('${escaparJs(item.trigger)}')">
+                        Adicionar response
+                    </button>
                 </div>
             </div>
 
@@ -597,6 +589,34 @@ async function criarTrigger() {
     }
 }
 
+async function adicionarResponse(trigger) {
+    const textarea = document.getElementById(`new-response-${trigger}`);
+    if (!textarea) return;
+
+    const nova = textarea.value.trim();
+
+    if (!nova) {
+        alert("Digite uma response válida.");
+        return;
+    }
+
+    try {
+        await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(nova)
+        });
+
+        textarea.value = "";
+        await abrirDetalhesTrigger(trigger);
+    } catch (err) {
+        console.error("Erro ao adicionar response:", err);
+        alert("Erro ao adicionar response.");
+    }
+}
+
 async function editarResponse(trigger, index) {
     const textarea = document.getElementById(`response-${trigger}-${index}`);
     if (!textarea) return;
@@ -637,17 +657,16 @@ function abrirModalExcluirTrigger(trigger) {
     const message = document.getElementById("delete-modal-message");
     const preview = document.getElementById("delete-preview");
 
-    if (title) title.textContent = "Excluir trigger";
-    if (message) message.textContent = "Tem certeza que deseja excluir esta trigger inteira?";
-
-    if (preview) {
-        preview.innerHTML = `
-            <strong>Trigger:</strong><br>
-            ${escaparHtml(trigger)}
-        `;
+    if (!modal || !title || !message || !preview) {
+        console.error("Modal de exclusão não encontrado no HTML.");
+        return;
     }
 
-    modal?.classList.remove("hidden");
+    title.textContent = "Excluir trigger";
+    message.textContent = "Tem certeza que deseja excluir esta trigger inteira?";
+    preview.innerHTML = `<strong>Trigger:</strong><br>${escaparHtml(trigger)}`;
+
+    modal.classList.remove("hidden");
 }
 
 function abrirModalExcluirResponse(trigger, index, responseTexto) {
@@ -662,19 +681,29 @@ function abrirModalExcluirResponse(trigger, index, responseTexto) {
     const message = document.getElementById("delete-modal-message");
     const preview = document.getElementById("delete-preview");
 
-    if (title) title.textContent = "Excluir resposta";
-    if (message) message.textContent = "Tem certeza que deseja excluir esta resposta?";
-
-    if (preview) {
-        preview.textContent = responseTexto ?? "";
+    if (!modal || !title || !message || !preview) {
+        console.error("Modal de exclusão não encontrado no HTML.");
+        return;
     }
 
-    modal?.classList.remove("hidden");
+    title.textContent = "Excluir resposta";
+    message.textContent = "Tem certeza que deseja excluir esta resposta?";
+    preview.textContent = responseTexto ?? "";
+
+    modal.classList.remove("hidden");
 }
 
 function fecharModalExcluir() {
     deleteData = null;
-    document.getElementById("delete-modal")?.classList.add("hidden");
+
+    const modal = document.getElementById("delete-modal");
+    const preview = document.getElementById("delete-preview");
+
+    if (preview) {
+        preview.innerHTML = "";
+    }
+
+    modal?.classList.add("hidden");
 }
 
 async function confirmarExclusao() {

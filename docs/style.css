@@ -738,4 +738,73 @@ body {
         max-height: none;
         min-height: 100px;
     }
+
+    /* =========================
+   NOVA RESPONSE
+========================= */
+
+.details-add-response-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+    margin-bottom: 18px;
+    padding: 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+}
+
+.new-response-textarea {
+    width: 100%;
+    min-height: 110px;
+    max-height: 220px;
+    resize: vertical;
+    overflow-y: auto;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.new-response-textarea::placeholder {
+    color: #94a3b8;
+}
+
+.add-response-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.details-add-response-box .secondary-btn {
+    min-width: 180px;
+    padding: 10px 16px;
+    border-radius: 10px;
+}
+
+.details-add-response-box .secondary-btn:hover {
+    filter: brightness(1.08);
+}
+
+/* responsivo da nova response */
+@media (max-width: 700px) {
+    .details-add-response-box {
+        padding: 12px;
+    }
+
+    .add-response-actions {
+        justify-content: stretch;
+    }
+
+    .details-add-response-box .secondary-btn {
+        width: 100%;
+        min-width: 0;
+    }
+}
 }
