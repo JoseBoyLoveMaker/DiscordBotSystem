@@ -900,3 +900,61 @@ body {
     padding-right: 56px !important;
 }
 
+/* corrige sobreposição do topo com o grid */
+.trigger-details-card {
+    display: block !important;
+    padding: 18px !important;
+    padding-right: 56px !important;
+}
+
+.trigger-details-card .trigger-header {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 16px !important;
+}
+
+.trigger-details-card .trigger-header-main {
+    display: block !important;
+    width: 100% !important;
+}
+
+.trigger-details-card .trigger-details-title,
+.trigger-details-card .trigger-count {
+    display: block !important;
+}
+
+/* grid das responses */
+.trigger-details-card .trigger-responses.trigger-responses-details {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    clear: both !important;
+}
+
+/* cada card interno */
+.trigger-details-card .response-row.response-row-details {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-height: 160px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+    margin: 0 !important;
+}
+
+.trigger-details-card .response-edit-box {
+    width: 100% !important;
+    min-height: 105px !important;
+    max-height: 160px !important;
+    box-sizing: border-box !important;
+    resize: vertical !important;
+    overflow-y: auto !important;
+}
+
+.trigger-details-card .response-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin-top: 8px !important;
+}
