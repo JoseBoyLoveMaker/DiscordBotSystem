@@ -338,6 +338,30 @@ function carregarServidor() {
     carregarListaTriggers();
 }
 
+function agruparTriggers(data) {
+    const mapa = new Map();
+
+    (data || []).forEach(item => {
+        const nomeTrigger = String(item?.trigger ?? "").trim();
+        if (!nomeTrigger) return;
+
+        const responses = Array.isArray(item.responses) ? item.responses : [];
+
+        if (!mapa.has(nomeTrigger)) {
+            mapa.set(nomeTrigger, {
+                trigger: nomeTrigger,
+                responses: []
+            });
+        }
+
+        mapa.get(nomeTrigger).responses.push(...responses);
+    });
+
+    return Array.from(mapa.values()).sort((a, b) =>
+        a.trigger.localeCompare(b.trigger, "pt-BR", { sensitivity: "base" })
+    );
+}
+
 async function carregarListaTriggers() {
     const container = document.getElementById("triggers-list");
     if (!container) return;
@@ -349,9 +373,11 @@ async function carregarListaTriggers() {
 
     try {
         const data = await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses`);
+        const triggersAgrupadas = agruparTriggers(data);
+
         container.innerHTML = "";
 
-        if (!data.length) {
+        if (!triggersAgrupadas.length) {
             container.innerHTML = `
                 <div class="card">
                     <h3>Sem triggers</h3>
@@ -361,7 +387,7 @@ async function carregarListaTriggers() {
             return;
         }
 
-        container.innerHTML = data.map(item => criarCardTrigger(item)).join("");
+        container.innerHTML = triggersAgrupadas.map(item => criarCardTrigger(item)).join("");
     } catch (err) {
         console.error("Erro ao carregar triggers:", err);
         container.innerHTML = `<div class="card"><p>Erro ao carregar triggers.</p></div>`;
@@ -428,7 +454,8 @@ async function abrirDetalhesTrigger(trigger) {
 
     try {
         const data = await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses`);
-        const item = data.find(x => String(x.trigger) === String(trigger));
+        const triggersAgrupadas = agruparTriggers(data);
+        const item = triggersAgrupadas.find(x => String(x.trigger) === String(trigger));
 
         const container = document.getElementById("trigger-details-content");
         if (!container) return;
@@ -658,12 +685,15 @@ async function confirmarExclusao() {
 
     try {
         if (deleteData.type === "trigger") {
-            await fetchJson(
-                `${API_BASE}/api/guilds/${currentGuildId}/responses/${encodeURIComponent(deleteData.trigger)}`,
-                {
-                    method: "DELETE"
-                }
-            );
+            const data = await fetchJson(`${API_BASE}/api/guilds/${currentGuildId}/responses`);
+            const repetidas = (data || []).filter(x => String(x.trigger) === String(deleteData.trigger));
+
+            for (let i = 0; i < repetidas.length; i++) {
+                await fetchJson(
+                    `${API_BASE}/api/guilds/${currentGuildId}/responses/${encodeURIComponent(deleteData.trigger)}`,
+                    { method: "DELETE" }
+                );
+            }
 
             carregarServidor();
             return;
