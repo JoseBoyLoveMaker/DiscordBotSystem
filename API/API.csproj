@@ -1,29 +1,32 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Remove="Settings\appsettings.Development.json" />
-    <Content Remove="Settings\appsettings.json" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Settings\appsettings.json" />
+		<None Remove="Settings\appsettings.Development.json" />
+		<Content Remove="Settings\appsettings.json" />
+		<Content Remove="Settings\appsettings.Development.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="Settings\appsettings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Settings\appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="Settings\appsettings.json" Condition="Exists('Settings\appsettings.json')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 
-  <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="3.19.0" />
-    <PackageReference Include="MongoDB.Driver" Version="3.7.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
+		<None Include="Settings\appsettings.Development.json" Condition="Exists('Settings\appsettings.Development.json')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Discord.Net" Version="3.19.0" />
+		<PackageReference Include="MongoDB.Driver" Version="3.7.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+	</ItemGroup>
 
 </Project>
