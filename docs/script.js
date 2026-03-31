@@ -483,11 +483,11 @@ function criarDetalhesTrigger(item) {
                     data-original="${escaparHtml(resp)}">${escaparHtml(resp)}</textarea>
 
                 <div class="response-actions">
-                    <button
+                   <button
                         type="button"
                         class="mini-delete-btn"
                         title="Excluir resposta"
-                        onclick="event.stopPropagation(); abrirModalExcluirResponse('${escaparJs(item.trigger)}', ${index}, '${escaparJs(resp)}')">
+                        onclick="event.stopPropagation(); abrirModalExcluirResponsePorBotao('${escaparJs(item.trigger)}', ${index}, this)">
                         🗑️
                     </button>
                 </div>
@@ -657,6 +657,15 @@ async function editarResponse(trigger, index) {
 // =========================
 // EXCLUSÃO
 // =========================
+
+function abrirModalExcluirResponsePorBotao(trigger, index, button) {
+    const container = button?.parentElement?.parentElement;
+    const textarea = container?.querySelector(".response-edit-box");
+
+    const texto = textarea ? textarea.value : "";
+
+    abrirModalExcluirResponse(trigger, index, texto);
+}
 
 function abrirModalExcluirTrigger(trigger) {
     deleteData = {
