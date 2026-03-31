@@ -1,12 +1,18 @@
-const API_BASE = "https://localhost:7229";
+const LOCAL_API_BASE = "https://localhost:7229";
+const PROD_API_BASE = "https://SEU-DOMINIO-DA-API.up.railway.apphttps://discordbotsystem-production.up.railway.app/auth/discord/callback";
+
+const API_BASE =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? LOCAL_API_BASE
+        : PROD_API_BASE;
+
 const BOT_CLIENT_ID = "1479279369477423135";
 const BOT_PERMISSIONS = "8";
 
 let currentUser = null;
 let currentGuildId = null;
 
-let isBold = false;
-let isItalic = false;
 let deleteData = null;
 
 // =========================
@@ -22,24 +28,68 @@ function mostrarTela(id) {
 }
 
 // =========================
+// UTIL
+// =========================
+
+function escaparHtml(texto) {
+    return String(texto ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function escaparJs(texto) {
+    return String(texto ?? "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll('"', '\\"')
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r");
+}
+
+async function fetchJson(url, options = {}) {
+    const finalOptions = {
+        credentials: "include",
+        ...options,
+        headers: {
+            ...(options.headers || {})
+        }
+    };
+
+    const res = await fetch(url, finalOptions);
+
+    if (!res.ok) {
+        let body = "";
+        try {
+            body = await res.text();
+        } catch {
+            body = "";
+        }
+
+        throw new Error(`HTTP ${res.status} - ${body || "Erro na requisição"}`);
+    }
+
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+        return await res.json();
+    }
+
+    return null;
+}
+
+// =========================
 // AUTENTICAÇÃO
 // =========================
 
 async function verificarSessao() {
     try {
-        const res = await fetch(`${API_BASE}/auth/me`, {
-            credentials: "include"
-        });
+        const user = await fetchJson(`${API_BASE}/auth/me`);
 
-        if (!res.ok) {
-            mostrarTela("auth-screen");
-            return;
-        }
-
-        const user = await res.json();
         currentUser = user;
-
         preencherUsuario(user);
+
         await carregarServidores();
 
         mostrarTela("app-screen");
@@ -95,15 +145,7 @@ async function carregarServidores() {
     if (!strip) return;
 
     try {
-        const res = await fetch(`${API_BASE}/guilds`, {
-            credentials: "include"
-        });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
-        const guilds = await res.json();
+        const guilds = await fetchJson(`${API_BASE}/guilds`);
         strip.innerHTML = "";
 
         if (!guilds.length) {
@@ -171,28 +213,6 @@ function atualizarServidorSelecionadoTexto(nome) {
 }
 
 // =========================
-// UTIL
-// =========================
-
-function escaparHtml(texto) {
-    return String(texto ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-function escaparJs(texto) {
-    return String(texto ?? "")
-        .replaceAll("\\", "\\\\")
-        .replaceAll("'", "\\'")
-        .replaceAll('"', '\\"')
-        .replaceAll("\n", "\\n")
-        .replaceAll("\r", "\\r");
-}
-
-// =========================
 // DASHBOARD
 // =========================
 
@@ -203,19 +223,18 @@ async function loadStats() {
     const statusEl = document.getElementById("status");
 
     try {
-        const res = await fetch(`${API_BASE}/api/bot/stats`);
-        const data = await res.json();
+        const data = await fetchJson(`${API_BASE}/api/bot/stats`);
 
-        if (usersEl) usersEl.innerText = data.users ?? 0;
-        if (xpEl) xpEl.innerText = data.totalXp ?? 0;
-        if (commandsEl) commandsEl.innerText = data.commands ?? 0;
+        if (usersEl) usersEl.innerText = data?.users ?? 0;
+        if (xpEl) xpEl.innerText = data?.totalXp ?? 0;
+        if (commandsEl) commandsEl.innerText = data?.commands ?? 0;
 
         if (statusEl) {
             statusEl.innerText =
-                data.status === "Online" ? "🟢 Online" : "🔴 Offline";
+                data?.status === "Online" ? "🟢 Online" : "🔴 Offline";
         }
-
-    } catch {
+    } catch (err) {
+        console.error("Erro ao carregar stats:", err);
         if (statusEl) {
             statusEl.innerText = "Erro ao conectar API";
         }
@@ -224,6 +243,7 @@ async function loadStats() {
 
 function carregarDashboard() {
     const content = document.getElementById("main-content");
+    if (!content) return;
 
     content.innerHTML = `
         <h1>Dashboard</h1>
@@ -277,6 +297,7 @@ function adicionarBotAoServidor() {
 
 function carregarServidor() {
     const content = document.getElementById("main-content");
+    if (!content) return;
 
     if (!getServerId()) {
         content.innerHTML = `<h1>Servidor</h1><p>Nenhum servidor selecionado.</p>`;
@@ -327,15 +348,7 @@ async function carregarListaTriggers() {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses`, {
-            credentials: "include"
-        });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
-        const data = await res.json();
+        const data = await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses`);
         container.innerHTML = "";
 
         if (!data.length) {
@@ -431,18 +444,13 @@ async function criarTrigger() {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses`, {
+        await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            credentials: "include",
             body: JSON.stringify(trigger)
         });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
 
         input.value = "";
         await carregarListaTriggers();
@@ -464,18 +472,13 @@ async function adicionarResponse(trigger) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}`, {
+        await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            credentials: "include",
             body: JSON.stringify(nova)
         });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
 
         textarea.value = "";
         await carregarListaTriggers();
@@ -497,18 +500,13 @@ async function editarResponse(trigger, index) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}/${index}`, {
+        await fetchJson(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}/${index}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json"
             },
-            credentials: "include",
             body: JSON.stringify(nova)
         });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
 
         await carregarListaTriggers();
     } catch (err) {
@@ -580,31 +578,21 @@ async function confirmarExclusao() {
 
     try {
         if (deleteData.type === "trigger") {
-            const res = await fetch(
+            await fetchJson(
                 `${API_BASE}/api/guilds/${currentGuildId}/responses/${encodeURIComponent(deleteData.trigger)}`,
                 {
-                    method: "DELETE",
-                    credentials: "include"
+                    method: "DELETE"
                 }
             );
-
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status}`);
-            }
         }
 
         if (deleteData.type === "response") {
-            const res = await fetch(
+            await fetchJson(
                 `${API_BASE}/api/guilds/${currentGuildId}/responses/${encodeURIComponent(deleteData.trigger)}/${deleteData.index}`,
                 {
-                    method: "DELETE",
-                    credentials: "include"
+                    method: "DELETE"
                 }
             );
-
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status}`);
-            }
         }
 
         await carregarListaTriggers();
@@ -622,6 +610,12 @@ async function confirmarExclusao() {
 
 function carregarComandos() {
     const content = document.getElementById("main-content");
+    if (!content) return;
+
+    if (!getServerId()) {
+        content.innerHTML = `<h1>Comandos</h1><p>Nenhum servidor selecionado.</p>`;
+        return;
+    }
 
     content.innerHTML = `
         <h1>Comandos</h1>
@@ -633,11 +627,10 @@ function carregarComandos() {
 
 async function carregarListaComandos() {
     const container = document.getElementById("commands-list");
+    if (!container) return;
 
     try {
-        const res = await fetch(`${API_BASE}/api/commands/${getServerId()}`);
-        const data = await res.json();
-
+        const data = await fetchJson(`${API_BASE}/api/commands/${getServerId()}`);
         container.innerHTML = "";
 
         data.forEach(cmd => {
@@ -654,18 +647,23 @@ async function carregarListaComandos() {
                 </div>
             `;
         });
-
     } catch (err) {
+        console.error("Erro ao carregar comandos:", err);
         container.innerHTML = "Erro ao carregar comandos";
     }
 }
 
 async function alterarStatusComando(commandName, enabled) {
-    await fetch(`${API_BASE}/api/commands/${getServerId()}/${encodeURIComponent(commandName)}/enabled`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(enabled)
-    });
+    try {
+        await fetchJson(`${API_BASE}/api/commands/${getServerId()}/${encodeURIComponent(commandName)}/enabled`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(enabled)
+        });
+    } catch (err) {
+        console.error("Erro ao alterar status do comando:", err);
+        alert("Erro ao alterar status do comando.");
+    }
 }
 
 // =========================
@@ -694,10 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (loginBtn) loginBtn.addEventListener("click", iniciarLoginDiscord);
     if (logoutBtn) logoutBtn.addEventListener("click", logout);
-
-    if (inviteBotBtn) {
-        inviteBotBtn.addEventListener("click", adicionarBotAoServidor);
-    }
+    if (inviteBotBtn) inviteBotBtn.addEventListener("click", adicionarBotAoServidor);
 
     if (btnDashboard) {
         btnDashboard.onclick = (e) => {
@@ -723,6 +718,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (toggle && sidebar) {
         toggle.onclick = () => sidebar.classList.toggle("closed");
     }
+
+    console.log("API_BASE atual:", API_BASE);
 
     mostrarTela("loading-screen");
     verificarSessao();
