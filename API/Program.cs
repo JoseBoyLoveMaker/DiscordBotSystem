@@ -12,9 +12,6 @@ builder.Configuration
 
 Console.WriteLine("ClientId raw: " + builder.Configuration["DiscordOAuth:ClientId"]);
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
