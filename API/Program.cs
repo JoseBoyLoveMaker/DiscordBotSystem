@@ -14,7 +14,7 @@ builder.Configuration
         reloadOnChange: true)
     .AddEnvironmentVariables();
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5679";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddControllers();
