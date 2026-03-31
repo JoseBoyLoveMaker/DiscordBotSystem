@@ -82,6 +82,7 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors("Painel");
 app.UseAuthorization();
 app.MapControllers();
