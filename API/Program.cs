@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 Console.WriteLine("=== BUILD NOVO 31/03 LOGIN TESTE V2 ===");
 Console.WriteLine("ASPNETCORE_URLS raw: " + Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
 Console.WriteLine("PORT raw: " + Environment.GetEnvironmentVariable("PORT"));
+Console.WriteLine("ASPNETCORE_ENVIRONMENT raw: " + Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
 
 builder.Configuration
     .AddJsonFile("Settings/appsettings.json", optional: true, reloadOnChange: true)
