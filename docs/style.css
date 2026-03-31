@@ -541,7 +541,7 @@ body {
     height: 34px;
     border: none;
     border-radius: 10px;
-    background: #334155;
+    background: #ef4444;
     color: white;
     cursor: pointer;
     display: flex;
@@ -552,7 +552,7 @@ body {
 }
 
 .trigger-delete-btn:hover {
-    background: #ef4444;
+    background: #dc2626;
     transform: scale(1.05);
 }
 
@@ -618,7 +618,7 @@ body {
 
 .mini-delete-btn {
     border: none;
-    background: #334155;
+    background: #ef4444;
     color: white;
     border-radius: 8px;
     width: 32px;
@@ -629,7 +629,7 @@ body {
 }
 
 .mini-delete-btn:hover {
-    background: #ef4444;
+    background: #dc2626;
     transform: scale(1.05);
 }
 
@@ -638,4 +638,18 @@ body {
     font-size: 14px !important;
     margin: 0;
     font-weight: normal !important;
+}
+
+.trigger-header-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 8px;
+}
+
+.trigger-count {
+    margin: 0;
+    font-size: 13px !important;
+    color: #94a3b8 !important;
+    font-weight: 600 !important;
 }

@@ -305,7 +305,7 @@ function carregarServidor() {
     }
 
     content.innerHTML = `
-        <h1>Triggers e Responses</h1>
+        <h1>Triggers</h1>
 
         <div class="server-page-actions">
             <div class="trigger-create-box">
@@ -370,6 +370,7 @@ async function carregarListaTriggers() {
 
 function criarCardTrigger(item) {
     const responses = Array.isArray(item.responses) ? item.responses : [];
+    const totalResponses = responses.length;
 
     const respostasHtml = responses.length
         ? responses.map((resp, index) => `
@@ -396,7 +397,7 @@ function criarCardTrigger(item) {
                 </div>
             </div>
         `).join("")
-        : `<p class="empty-text">Nenhuma response cadastrada.</p>`;
+        : `<p class="empty-text">Nenhuma response cadastrada para esta trigger.</p>`;
 
     return `
         <div class="card trigger-card">
@@ -408,21 +409,10 @@ function criarCardTrigger(item) {
             </button>
 
             <div class="trigger-header">
-                <h3 class="trigger-title">${escaparHtml(item.trigger)}</h3>
-            </div>
-
-            <div class="add-response-box">
-                <textarea
-                    id="new-response-${escaparHtml(item.trigger)}"
-                    class="edit-box new-response-textarea"
-                    rows="2"
-                    placeholder="Digite uma nova response para esta trigger"></textarea>
-
-                <button
-                    class="secondary-btn"
-                    onclick="adicionarResponse('${escaparJs(item.trigger)}')">
-                    Adicionar
-                </button>
+                <div class="trigger-header-main">
+                    <h3 class="trigger-title">${escaparHtml(item.trigger)}</h3>
+                    <p class="trigger-count">${totalResponses} response${totalResponses === 1 ? "" : "s"}</p>
+                </div>
             </div>
 
             <div class="trigger-responses">
