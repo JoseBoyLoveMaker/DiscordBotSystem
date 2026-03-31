@@ -14,6 +14,9 @@ builder.Configuration
         reloadOnChange: true)
     .AddEnvironmentVariables();
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -71,20 +74,40 @@ forwardedHeadersOptions.KnownProxies.Clear();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var feature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "Erro interno na API",
+            path = feature?.Path,
+            detail = feature?.Error?.Message
+        });
+    });
+});
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-
-app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors("Painel");
 app.UseAuthorization();
+
+app.MapGet("/", () => Results.Ok(new { ok = true, service = "API online" }));
+app.MapGet("/health", () => Results.Ok(new
+{
+    ok = true,
+    env = app.Environment.EnvironmentName,
+    time = DateTime.UtcNow
+}));
+
 app.MapControllers();
 
 app.Run();
