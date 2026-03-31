@@ -24,18 +24,40 @@ public class AuthController : ControllerBase
     [HttpGet("discord/login")]
     public IActionResult Login()
     {
-        var state = Guid.NewGuid().ToString("N");
-
-        Response.Cookies.Append(OAuthStateCookieName, state, new CookieOptions
+        try
         {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(10)
-        });
+            Console.WriteLine("Entrou em /auth/discord/login");
 
-        var loginUrl = _discordAuthService.GetLoginUrl(state);
-        return Redirect(loginUrl);
+            var state = Guid.NewGuid().ToString("N");
+            Console.WriteLine("State gerado: " + state);
+            Console.WriteLine("RedirectUri settings: " + _oauthSettings.RedirectUri);
+            Console.WriteLine("ClientId settings: " + _oauthSettings.ClientId);
+
+            Response.Cookies.Append(OAuthStateCookieName, state, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
+            });
+
+            var loginUrl = _discordAuthService.GetLoginUrl(state);
+
+            Console.WriteLine("Redirecionando para: " + loginUrl);
+
+            return Redirect(loginUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("ERRO EM /auth/discord/login");
+            Console.WriteLine(ex.ToString());
+
+            return StatusCode(500, new
+            {
+                error = ex.Message,
+                stack = ex.StackTrace
+            });
+        }
     }
 
     [HttpGet("discord/callback")]
