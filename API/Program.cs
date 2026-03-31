@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
+Console.WriteLine("=== BUILD NOVO 31/03 LOGIN TESTE V2 ===");
+Console.WriteLine("ASPNETCORE_URLS raw: " + Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
+Console.WriteLine("PORT raw: " + Environment.GetEnvironmentVariable("PORT"));
+
 builder.Configuration
     .AddJsonFile("Settings/appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile(
@@ -95,7 +99,7 @@ app.UseSwaggerUI();
 app.UseCors("Painel");
 app.UseAuthorization();
 
-app.MapGet("/", () => Results.Ok(new { ok = true, service = "API online" }));
+app.MapGet("/", () => "BUILD NOVO V2");
 app.MapGet("/health", () => Results.Ok(new
 {
     ok = true,
