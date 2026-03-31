@@ -4,73 +4,111 @@ public class ResponseServiceAPI
 {
     private readonly IMongoCollection<ResponseDataAPI> _responses;
 
-    public ResponseServiceAPI(MongoHandlerAPI handler)
+    public ResponseServiceAPI(MongoHandlerAPI mongo)
     {
-        _responses = handler.Responses;
+        _responses = mongo.Responses;
     }
 
-    public async Task<List<ResponseDataAPI>> GetAllResponses()
+    public async Task<List<ResponseDataAPI>> GetAllResponses(ulong guildId)
     {
-        return await _responses.Find(_ => true).ToListAsync();
+        return await _responses
+            .Find(x => x.GuildId == guildId)
+            .SortBy(x => x.Trigger)
+            .ToListAsync();
     }
 
-    public async Task<ResponseDataAPI?> GetByTrigger(string trigger)
+    public async Task<ResponseDataAPI?> GetByTrigger(ulong guildId, string trigger)
     {
-        return await _responses.Find(x => x.Trigger == trigger).FirstOrDefaultAsync();
+        return await _responses
+            .Find(x => x.GuildId == guildId && x.Trigger == trigger)
+            .FirstOrDefaultAsync();
     }
 
-    public async Task AddResponse(string trigger, string nova)
+    public async Task CreateTrigger(ulong guildId, string trigger)
     {
-        var doc = await _responses.Find(x => x.Trigger == trigger).FirstOrDefaultAsync();
+        var exists = await _responses
+            .Find(x => x.GuildId == guildId && x.Trigger == trigger)
+            .AnyAsync();
 
-        if (doc == null)
+        if (exists)
+            return;
+
+        var data = new ResponseDataAPI
         {
-            var novoDoc = new ResponseDataAPI
+            GuildId = guildId,
+            Trigger = trigger,
+            Responses = new List<string>()
+        };
+
+        await _responses.InsertOneAsync(data);
+    }
+
+    public async Task AddResponse(ulong guildId, string trigger, string nova)
+    {
+        var data = await GetByTrigger(guildId, trigger);
+
+        if (data == null)
+        {
+            data = new ResponseDataAPI
             {
+                GuildId = guildId,
                 Trigger = trigger,
                 Responses = new List<string> { nova }
             };
 
-            await _responses.InsertOneAsync(novoDoc);
+            await _responses.InsertOneAsync(data);
             return;
         }
 
-        var update = Builders<ResponseDataAPI>.Update.Push(x => x.Responses, nova);
-        await _responses.UpdateOneAsync(x => x.Trigger == trigger, update);
+        data.Responses.Add(nova);
+
+        await _responses.ReplaceOneAsync(
+            x => x.Id == data.Id,
+            data
+        );
     }
 
-    public async Task DeleteResponse(string trigger, int index)
+    public async Task EditResponse(ulong guildId, string trigger, int index, string nova)
     {
-        var doc = await _responses.Find(x => x.Trigger == trigger).FirstOrDefaultAsync();
+        var data = await GetByTrigger(guildId, trigger);
 
-        if (doc == null || index < 0 || index >= doc.Responses.Count)
+        if (data == null)
             return;
 
-        doc.Responses.RemoveAt(index);
-
-        await _responses.ReplaceOneAsync(x => x.Trigger == trigger, doc);
-    }
-
-    public async Task EditResponse(string trigger, int index, string nova)
-    {
-        var doc = await _responses.Find(x => x.Trigger == trigger).FirstOrDefaultAsync();
-
-        if (doc == null || index < 0 || index >= doc.Responses.Count)
+        if (index < 0 || index >= data.Responses.Count)
             return;
 
-        doc.Responses[index] = nova;
+        data.Responses[index] = nova;
 
-        await _responses.ReplaceOneAsync(x => x.Trigger == trigger, doc);
+        await _responses.ReplaceOneAsync(
+            x => x.Id == data.Id,
+            data
+        );
     }
 
-    public async Task<string?> GetRandomResponse(string trigger)
+    public async Task DeleteResponse(ulong guildId, string trigger, int index)
     {
-        var doc = await _responses.Find(x => x.Trigger == trigger).FirstOrDefaultAsync();
+        var data = await GetByTrigger(guildId, trigger);
 
-        if (doc == null || doc.Responses == null || doc.Responses.Count == 0)
-            return null;
+        if (data == null)
+            return;
 
-        var rand = new Random();
-        return doc.Responses[rand.Next(doc.Responses.Count)];
+        if (index < 0 || index >= data.Responses.Count)
+            return;
+
+        data.Responses.RemoveAt(index);
+
+        await _responses.ReplaceOneAsync(
+            x => x.Id == data.Id,
+            data
+        );
+    }
+
+    public async Task DeleteTrigger(ulong guildId, string trigger)
+    {
+        await _responses.DeleteOneAsync(x =>
+            x.GuildId == guildId &&
+            x.Trigger == trigger
+        );
     }
 }

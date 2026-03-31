@@ -1,31 +1,225 @@
-const SERVER_ID = "562767536899358732";
 const API_BASE = "https://localhost:7229";
+const BOT_CLIENT_ID = "1479279369477423135";
+const BOT_PERMISSIONS = "8";
+
+let currentUser = null;
+let currentGuildId = null;
 
 let isBold = false;
 let isItalic = false;
 let deleteData = null;
 
 // =========================
-// FUNÇÕES DE NAVEGAÇÃO
+// TELAS
 // =========================
 
-function carregarComandos() {
-    const content = document.getElementById("main-content");
+function mostrarTela(id) {
+    document.getElementById("loading-screen")?.classList.add("hidden");
+    document.getElementById("auth-screen")?.classList.add("hidden");
+    document.getElementById("app-screen")?.classList.add("hidden");
 
-    content.innerHTML = `
-        <div class="header-trigger">
-            <div>
-                <h1>Comandos</h1>
-                <p>Gerencie comandos, aliases e atalhos.</p>
-            </div>
-        </div>
+    document.getElementById(id)?.classList.remove("hidden");
+}
 
-        <div id="commands-list" class="dashboard">
-            <p>Carregando comandos...</p>
-        </div>
-    `;
+// =========================
+// AUTENTICAÇÃO
+// =========================
 
-    carregarListaComandos();
+async function verificarSessao() {
+    try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+            credentials: "include"
+        });
+
+        if (!res.ok) {
+            mostrarTela("auth-screen");
+            return;
+        }
+
+        const user = await res.json();
+        currentUser = user;
+
+        preencherUsuario(user);
+        await carregarServidores();
+
+        mostrarTela("app-screen");
+        carregarDashboard();
+    } catch (err) {
+        console.error("Erro ao verificar sessão:", err);
+        mostrarTela("auth-screen");
+    }
+}
+
+function iniciarLoginDiscord() {
+    window.location.href = `${API_BASE}/auth/discord/login`;
+}
+
+async function logout() {
+    try {
+        await fetch(`${API_BASE}/auth/logout`, {
+            method: "POST",
+            credentials: "include"
+        });
+    } catch (err) {
+        console.error("Erro ao sair:", err);
+    }
+
+    currentUser = null;
+    currentGuildId = null;
+    mostrarTela("auth-screen");
+}
+
+// =========================
+// USUÁRIO
+// =========================
+
+function preencherUsuario(user) {
+    const nameEl = document.getElementById("user-name");
+    const avatarEl = document.getElementById("user-avatar");
+
+    if (nameEl) {
+        nameEl.textContent = user.globalName || user.username || "Usuário";
+    }
+
+    if (avatarEl && user.avatarUrl) {
+        avatarEl.src = user.avatarUrl;
+    }
+}
+
+// =========================
+// SERVIDORES
+// =========================
+
+async function carregarServidores() {
+    const strip = document.getElementById("servers-strip");
+    if (!strip) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/guilds`, {
+            credentials: "include"
+        });
+
+        if (!res.ok) {
+            throw new Error(`Erro HTTP: ${res.status}`);
+        }
+
+        const guilds = await res.json();
+        strip.innerHTML = "";
+
+        if (!guilds.length) {
+            strip.innerHTML = `<div class="server-pill active">Nenhum servidor disponível</div>`;
+            currentGuildId = null;
+            atualizarServidorSelecionadoTexto("Nenhum servidor selecionado");
+            return;
+        }
+
+        guilds.forEach((guild, index) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "server-pill";
+            btn.dataset.guildId = guild.id;
+            btn.dataset.guildName = guild.name;
+
+            const iconUrl = guild.icon
+                ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=64`
+                : "";
+
+            btn.innerHTML = `
+                <span class="server-pill-inner">
+                    ${
+                        iconUrl
+                            ? `<img class="server-pill-avatar" src="${iconUrl}" alt="${escaparHtml(guild.name)}">`
+                            : `<span class="server-pill-avatar server-pill-fallback">${escaparHtml(guild.name.charAt(0).toUpperCase())}</span>`
+                    }
+                    <span class="server-pill-name">${escaparHtml(guild.name)}</span>
+                </span>
+            `;
+
+            if (index === 0) {
+                btn.classList.add("active");
+                currentGuildId = guild.id;
+                atualizarServidorSelecionadoTexto(guild.name);
+            }
+
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".server-pill").forEach(el => {
+                    el.classList.remove("active");
+                });
+
+                btn.classList.add("active");
+                currentGuildId = guild.id;
+                atualizarServidorSelecionadoTexto(guild.name);
+
+                carregarDashboard();
+            });
+
+            strip.appendChild(btn);
+        });
+    } catch (err) {
+        console.error("Erro ao carregar servidores:", err);
+        strip.innerHTML = `<div class="server-pill active">Erro ao carregar servidores</div>`;
+    }
+}
+
+function getServerId() {
+    return currentGuildId;
+}
+
+function atualizarServidorSelecionadoTexto(nome) {
+    const el = document.getElementById("user-server");
+    if (el) el.textContent = nome;
+}
+
+// =========================
+// UTIL
+// =========================
+
+function escaparHtml(texto) {
+    return String(texto ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function escaparJs(texto) {
+    return String(texto ?? "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll('"', '\\"')
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r");
+}
+
+// =========================
+// DASHBOARD
+// =========================
+
+async function loadStats() {
+    const usersEl = document.getElementById("users");
+    const xpEl = document.getElementById("xp");
+    const commandsEl = document.getElementById("commands");
+    const statusEl = document.getElementById("status");
+
+    try {
+        const res = await fetch(`${API_BASE}/api/bot/stats`);
+        const data = await res.json();
+
+        if (usersEl) usersEl.innerText = data.users ?? 0;
+        if (xpEl) xpEl.innerText = data.totalXp ?? 0;
+        if (commandsEl) commandsEl.innerText = data.commands ?? 0;
+
+        if (statusEl) {
+            statusEl.innerText =
+                data.status === "Online" ? "🟢 Online" : "🔴 Offline";
+        }
+
+    } catch {
+        if (statusEl) {
+            statusEl.innerText = "Erro ao conectar API";
+        }
+    }
 }
 
 function carregarDashboard() {
@@ -60,57 +254,82 @@ function carregarDashboard() {
     loadStats();
 }
 
+function adicionarBotAoServidor() {
+    if (!currentGuildId) {
+        alert("Selecione um servidor primeiro.");
+        return;
+    }
+
+    const inviteUrl =
+        `https://discord.com/oauth2/authorize` +
+        `?client_id=${BOT_CLIENT_ID}` +
+        `&permissions=${BOT_PERMISSIONS}` +
+        `&scope=bot%20applications.commands` +
+        `&guild_id=${currentGuildId}` +
+        `&disable_guild_select=true`;
+
+    window.open(inviteUrl, "_blank");
+}
+
+// =========================
+// SERVIDOR / TRIGGERS
+// =========================
+
 function carregarServidor() {
     const content = document.getElementById("main-content");
 
+    if (!getServerId()) {
+        content.innerHTML = `<h1>Servidor</h1><p>Nenhum servidor selecionado.</p>`;
+        return;
+    }
+
     content.innerHTML = `
-        <h1>Servidor</h1>
+        <h1>Triggers e Responses</h1>
 
-        <div class="dashboard">
-            <div class="card">
-                <h3>👥 Membros</h3>
-                <p id="members">Carregando...</p>
+        <div class="server-page-actions">
+            <div class="trigger-create-box">
+                <input
+                    type="text"
+                    id="new-trigger-input"
+                    class="trigger-input"
+                    placeholder="Digite o nome da trigger">
+                <button class="secondary-btn" onclick="criarTrigger()">Criar Trigger</button>
             </div>
+        </div>
 
-            <div class="card">
-                <h3>💬 Respostas automáticas</h3>
-                <button onclick="abrirRespostas()">Gerenciar</button>
-            </div>
+        <div id="triggers-list" class="dashboard"></div>
 
-            <div class="card">
-                <h3>⚙️ Configurações</h3>
-                <button>Editar</button>
+        <div id="delete-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3 id="delete-modal-title">Excluir</h3>
+                <p id="delete-modal-message">Tem certeza?</p>
+
+                <div id="delete-preview" class="delete-preview"></div>
+
+                <div class="modal-buttons">
+                    <button class="btn-cancel" onclick="fecharModalExcluir()">Cancelar</button>
+                    <button class="btn-delete" onclick="confirmarExclusao()">Excluir</button>
+                </div>
             </div>
         </div>
     `;
+
+    carregarListaTriggers();
 }
 
-// =========================
-// TRIGGERS / RESPOSTAS
-// =========================
+async function carregarListaTriggers() {
+    const container = document.getElementById("triggers-list");
+    if (!container) return;
 
-function abrirRespostas() {
-    const content = document.getElementById("main-content");
-
-    content.innerHTML = `
-        <div class="header-trigger">
-            <h1>Respostas Automáticas</h1>
-            <button onclick="criarTrigger()" class="btn-add">➕ Nova Trigger</button>
-        </div>
-
-        <div id="triggers-container" class="dashboard">
-            <p>Carregando triggers...</p>
-        </div>
-    `;
-
-    carregarTriggers();
-}
-
-async function carregarTriggers() {
-    const container = document.getElementById("triggers-container");
+    if (!getServerId()) {
+        container.innerHTML = `<p>Nenhum servidor selecionado.</p>`;
+        return;
+    }
 
     try {
-        const res = await fetch(`${API_BASE}/api/responses`);
+        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses`, {
+            credentials: "include"
+        });
 
         if (!res.ok) {
             throw new Error(`Erro HTTP: ${res.status}`);
@@ -119,431 +338,333 @@ async function carregarTriggers() {
         const data = await res.json();
         container.innerHTML = "";
 
-        data.forEach(trigger => {
-            container.innerHTML += `
-                <div class="card" onclick="abrirTrigger(\`${trigger.trigger}\`)">
-                    <h3>⚡ ${trigger.trigger}</h3>
-                    <p>${trigger.responses?.length || 0} respostas</p>
-                </div>
-            `;
-        });
-    } catch (err) {
-        console.error("Erro ao carregar triggers:", err);
-        container.innerHTML = `<p style="color:red;">Erro ao carregar triggers.</p>`;
-    }
-}
-
-async function abrirTrigger(triggerName) {
-    const content = document.getElementById("main-content");
-
-    try {
-        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(triggerName)}`);
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        content.innerHTML = `
-            <div class="header-trigger">
-                <div>
-                    <h1>Trigger: ${triggerName}</h1>
-                    <button onclick="abrirRespostas()">⬅ Voltar</button>
-                </div>
-
-                <div class="format-buttons">
-                    <button onclick="toggleBold('${triggerName}')" class="btn-format">B</button>
-                    <button onclick="toggleItalic('${triggerName}')" class="btn-format">I</button>
-                    <button onclick="adicionarResposta(\`${triggerName}\`)" class="btn-add">
-                        ➕ Nova resposta
-                    </button>
-                </div>
-            </div>
-
-            <div id="responses-list" class="dashboard"></div>
-
-            <button onclick="adicionarResposta(\`${triggerName}\`)" class="btn-add">
-                ➕ Nova resposta
-            </button>
-        `;
-
-        const list = document.getElementById("responses-list");
-
-        data.responses.forEach((resp, index) => {
-            list.innerHTML += `
+        if (!data.length) {
+            container.innerHTML = `
                 <div class="card">
-                    <textarea
-                        class="edit-box"
-                        oninput="autoResize(this)"
-                        onblur="salvarEdicao('${triggerName}', ${index}, this.value)"
-                    >${resp.replace(/</g, "&lt;")}</textarea>
-
-                    <button class="delete-btn" onclick="confirmarDelete('${triggerName}', ${index})">🗑️</button>
+                    <h3>Sem triggers</h3>
+                    <p class="empty-text">Crie a primeira trigger para começar.</p>
                 </div>
             `;
-        });
-
-        setTimeout(() => {
-            document.querySelectorAll(".edit-box").forEach(autoResize);
-        }, 0);
-
-        updateButtons();
-    } catch (err) {
-        console.error("Erro ao abrir trigger:", err);
-        content.innerHTML = `<p style="color:red;">Erro ao carregar a trigger.</p>`;
-    }
-}
-
-async function criarTrigger() {
-    const nome = prompt("Nome da nova trigger:");
-    if (!nome) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/responses`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(nome)
-        });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
-        carregarTriggers();
-    } catch (err) {
-        console.error("Erro ao criar trigger:", err);
-        alert("Não foi possível criar a trigger.");
-    }
-}
-
-async function deletarResposta(trigger, index) {
-    try {
-        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(trigger)}/${index}`, {
-            method: "DELETE"
-        });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
-        abrirTrigger(trigger);
-    } catch (err) {
-        console.error("Erro ao deletar resposta:", err);
-        alert("Não foi possível deletar a resposta.");
-    }
-}
-
-async function editarResposta(trigger, index) {
-    const nova = prompt("Editar resposta:");
-    if (!nova) return;
-
-    try {
-        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(trigger)}/${index}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(nova)
-        });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
-        abrirTrigger(trigger);
-    } catch (err) {
-        console.error("Erro ao editar resposta:", err);
-        alert("Não foi possível editar a resposta.");
-    }
-}
-
-async function salvarEdicao(trigger, index, nova) {
-    try {
-        const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(trigger)}/${index}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(nova)
-        });
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-    } catch (err) {
-        console.error("Erro ao salvar edição:", err);
-    }
-}
-
-async function adicionarResposta(trigger) {
-    const list = document.getElementById("responses-list");
-    const card = document.createElement("div");
-    card.className = "card";
-
-    card.innerHTML = `
-        <textarea
-            class="edit-box"
-            placeholder="Digite a nova resposta..."
-        ></textarea>
-    `;
-
-    list.prepend(card);
-
-    const textarea = card.querySelector("textarea");
-    textarea.focus();
-    autoResize(textarea);
-
-    textarea.addEventListener("input", () => autoResize(textarea));
-
-    textarea.addEventListener("blur", async () => {
-        const value = textarea.value.trim();
-
-        if (!value) {
-            card.remove();
             return;
         }
 
-        try {
-            const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(trigger)}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(value)
-            });
-
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status}`);
-            }
-
-            abrirTrigger(trigger);
-        } catch (err) {
-            console.error("Erro ao adicionar resposta:", err);
-            alert("Não foi possível adicionar a resposta.");
-        }
-    });
-}
-
-// =========================
-// MODAL
-// =========================
-
-function confirmarDelete(trigger, index) {
-    const textareas = document.querySelectorAll(".edit-box");
-    const texto = textareas[index]?.value || "(vazio)";
-
-    deleteData = { trigger, index };
-
-    const preview = document.getElementById("delete-preview");
-    preview.innerText = texto;
-
-    const modal = document.getElementById("confirm-modal");
-    modal.classList.remove("hidden");
-}
-
-function fecharModal() {
-    document.getElementById("confirm-modal").classList.add("hidden");
-    deleteData = null;
-}
-
-// =========================
-// FORMATAÇÃO
-// =========================
-
-function autoResize(textarea) {
-    textarea.style.height = "0px";
-    textarea.style.height = textarea.scrollHeight + "px";
-}
-
-function toggleBold(trigger) {
-    isBold = !isBold;
-    atualizarTodasRespostas(trigger);
-    updateButtons();
-}
-
-function toggleItalic(trigger) {
-    isItalic = !isItalic;
-    atualizarTodasRespostas(trigger);
-    updateButtons();
-}
-
-function limparFormatacao(texto) {
-    return texto
-        .replace(/^\*{1,3}/, "")
-        .replace(/\*{1,3}$/, "");
-}
-
-function aplicarFormatacao(texto) {
-    const limpo = limparFormatacao(texto);
-
-    if (isBold && isItalic) return `***${limpo}***`;
-    if (isBold) return `**${limpo}**`;
-    if (isItalic) return `*${limpo}*`;
-
-    return limpo;
-}
-
-async function atualizarTodasRespostas(trigger) {
-    const textareas = document.querySelectorAll(".edit-box");
-
-    for (let i = 0; i < textareas.length; i++) {
-        const texto = textareas[i].value;
-        const formatado = aplicarFormatacao(texto);
-
-        textareas[i].value = formatado;
-        autoResize(textareas[i]);
-
-        try {
-            const res = await fetch(`${API_BASE}/api/responses/${encodeURIComponent(trigger)}/${i}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formatado)
-            });
-
-            if (!res.ok) {
-                throw new Error(`Erro HTTP: ${res.status}`);
-            }
-        } catch (err) {
-            console.error(`Erro ao atualizar resposta ${i}:`, err);
-        }
+        container.innerHTML = data.map(item => criarCardTrigger(item)).join("");
+    } catch (err) {
+        console.error("Erro ao carregar triggers:", err);
+        container.innerHTML = `<div class="card"><p>Erro ao carregar triggers.</p></div>`;
     }
 }
 
-function updateButtons() {
-    const buttons = document.querySelectorAll(".btn-format");
-    if (buttons.length < 2) return;
+function criarCardTrigger(item) {
+    const responses = Array.isArray(item.responses) ? item.responses : [];
 
-    buttons[0].classList.toggle("active", isBold);
-    buttons[1].classList.toggle("active", isItalic);
+    const respostasHtml = responses.length
+        ? responses.map((resp, index) => `
+            <div class="response-row">
+                <textarea
+                    id="response-${escaparHtml(item.trigger)}-${index}"
+                    class="edit-box"
+                    rows="2">${escaparHtml(resp)}</textarea>
+
+                <div class="response-actions">
+                    <button
+                        class="save-response-btn"
+                        title="Salvar edição"
+                        onclick="editarResponse('${escaparJs(item.trigger)}', ${index})">
+                        Salvar
+                    </button>
+
+                    <button
+                        class="mini-delete-btn"
+                        title="Excluir resposta"
+                        onclick="abrirModalExcluirResponse('${escaparJs(item.trigger)}', ${index}, '${escaparJs(resp)}')">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `).join("")
+        : `<p class="empty-text">Nenhuma response cadastrada.</p>`;
+
+    return `
+        <div class="card trigger-card">
+            <button
+                class="trigger-delete-btn"
+                title="Excluir trigger"
+                onclick="abrirModalExcluirTrigger('${escaparJs(item.trigger)}')">
+                🗑️
+            </button>
+
+            <div class="trigger-header">
+                <h3 class="trigger-title">${escaparHtml(item.trigger)}</h3>
+            </div>
+
+            <div class="add-response-box">
+                <textarea
+                    id="new-response-${escaparHtml(item.trigger)}"
+                    class="edit-box new-response-textarea"
+                    rows="2"
+                    placeholder="Digite uma nova response para esta trigger"></textarea>
+
+                <button
+                    class="secondary-btn"
+                    onclick="adicionarResponse('${escaparJs(item.trigger)}')">
+                    Adicionar
+                </button>
+            </div>
+
+            <div class="trigger-responses">
+                ${respostasHtml}
+            </div>
+        </div>
+    `;
 }
 
-// =========================
-// DASHBOARD
-// =========================
+async function criarTrigger() {
+    const input = document.getElementById("new-trigger-input");
+    if (!input) return;
 
-async function loadStats() {
-    const usersEl = document.getElementById("users");
-    const xpEl = document.getElementById("xp");
-    const commandsEl = document.getElementById("commands");
-    const statusEl = document.getElementById("status");
+    const trigger = input.value.trim();
 
-    if (!usersEl && !xpEl && !commandsEl && !statusEl) return;
+    if (!trigger) {
+        alert("Digite uma trigger válida.");
+        return;
+    }
 
     try {
-        const res = await fetch(`${API_BASE}/api/bot/stats`);
+        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify(trigger)
+        });
 
         if (!res.ok) {
             throw new Error(`Erro HTTP: ${res.status}`);
         }
 
-        const data = await res.json();
-
-        if (usersEl) usersEl.innerText = data.users ?? 0;
-        if (xpEl) xpEl.innerText = data.totalXp ?? 0;
-        if (commandsEl) commandsEl.innerText = data.commands ?? 0;
-
-        if (statusEl) {
-            if (data.status === "Online") {
-                statusEl.innerText = "🟢 Online";
-                statusEl.style.color = "lime";
-            } else {
-                statusEl.innerText = "🔴 Offline";
-                statusEl.style.color = "red";
-            }
-        }
+        input.value = "";
+        await carregarListaTriggers();
     } catch (err) {
-        console.error("Erro ao carregar stats:", err);
-
-        if (statusEl) {
-            statusEl.innerText = "Erro ao conectar API";
-            statusEl.style.color = "red";
-        }
+        console.error("Erro ao criar trigger:", err);
+        alert("Erro ao criar trigger.");
     }
 }
+
+async function adicionarResponse(trigger) {
+    const textarea = document.getElementById(`new-response-${trigger}`);
+    if (!textarea) return;
+
+    const nova = textarea.value.trim();
+
+    if (!nova) {
+        alert("Digite uma resposta válida.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify(nova)
+        });
+
+        if (!res.ok) {
+            throw new Error(`Erro HTTP: ${res.status}`);
+        }
+
+        textarea.value = "";
+        await carregarListaTriggers();
+    } catch (err) {
+        console.error("Erro ao adicionar response:", err);
+        alert("Erro ao adicionar response.");
+    }
+}
+
+async function editarResponse(trigger, index) {
+    const textarea = document.getElementById(`response-${trigger}-${index}`);
+    if (!textarea) return;
+
+    const nova = textarea.value.trim();
+
+    if (!nova) {
+        alert("Digite uma resposta válida.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/guilds/${getServerId()}/responses/${encodeURIComponent(trigger)}/${index}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify(nova)
+        });
+
+        if (!res.ok) {
+            throw new Error(`Erro HTTP: ${res.status}`);
+        }
+
+        await carregarListaTriggers();
+    } catch (err) {
+        console.error("Erro ao editar response:", err);
+        alert("Erro ao editar response.");
+    }
+}
+
+// =========================
+// EXCLUSÃO
+// =========================
+
+function abrirModalExcluirTrigger(trigger) {
+    deleteData = {
+        type: "trigger",
+        trigger
+    };
+
+    const modal = document.getElementById("delete-modal");
+    const title = document.getElementById("delete-modal-title");
+    const message = document.getElementById("delete-modal-message");
+    const preview = document.getElementById("delete-preview");
+
+    if (title) title.textContent = "Excluir trigger";
+    if (message) message.textContent = "Tem certeza que deseja excluir esta trigger inteira?";
+
+    if (preview) {
+        preview.innerHTML = `
+            <strong>Trigger:</strong><br>
+            ${escaparHtml(trigger)}
+        `;
+    }
+
+    modal?.classList.remove("hidden");
+}
+
+function abrirModalExcluirResponse(trigger, index, responseTexto) {
+    deleteData = {
+        type: "response",
+        trigger,
+        index
+    };
+
+    const modal = document.getElementById("delete-modal");
+    const title = document.getElementById("delete-modal-title");
+    const message = document.getElementById("delete-modal-message");
+    const preview = document.getElementById("delete-preview");
+
+    if (title) title.textContent = "Excluir resposta";
+    if (message) message.textContent = "Tem certeza que deseja excluir esta resposta?";
+
+    if (preview) {
+        preview.textContent = responseTexto ?? "";
+    }
+
+    modal?.classList.remove("hidden");
+}
+
+function fecharModalExcluir() {
+    deleteData = null;
+    document.getElementById("delete-modal")?.classList.add("hidden");
+}
+
+async function confirmarExclusao() {
+    if (!deleteData || !currentGuildId) {
+        fecharModalExcluir();
+        return;
+    }
+
+    try {
+        if (deleteData.type === "trigger") {
+            const res = await fetch(
+                `${API_BASE}/api/guilds/${currentGuildId}/responses/${encodeURIComponent(deleteData.trigger)}`,
+                {
+                    method: "DELETE",
+                    credentials: "include"
+                }
+            );
+
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status}`);
+            }
+        }
+
+        if (deleteData.type === "response") {
+            const res = await fetch(
+                `${API_BASE}/api/guilds/${currentGuildId}/responses/${encodeURIComponent(deleteData.trigger)}/${deleteData.index}`,
+                {
+                    method: "DELETE",
+                    credentials: "include"
+                }
+            );
+
+            if (!res.ok) {
+                throw new Error(`Erro HTTP: ${res.status}`);
+            }
+        }
+
+        await carregarListaTriggers();
+    } catch (err) {
+        console.error("Erro ao excluir:", err);
+        alert("Erro ao excluir.");
+    } finally {
+        fecharModalExcluir();
+    }
+}
+
 // =========================
 // COMANDOS
 // =========================
+
+function carregarComandos() {
+    const content = document.getElementById("main-content");
+
+    content.innerHTML = `
+        <h1>Comandos</h1>
+        <div id="commands-list" class="dashboard"></div>
+    `;
+
+    carregarListaComandos();
+}
 
 async function carregarListaComandos() {
     const container = document.getElementById("commands-list");
 
     try {
-        const res = await fetch(`${API_BASE}/api/commands/${SERVER_ID}`);
-
-        if (!res.ok) {
-            throw new Error(`Erro HTTP: ${res.status}`);
-        }
-
+        const res = await fetch(`${API_BASE}/api/commands/${getServerId()}`);
         const data = await res.json();
-        container.innerHTML = "";
 
-        if (!data || data.length === 0) {
-            container.innerHTML = `<p>Nenhum comando encontrado para este servidor.</p>`;
-            return;
-        }
+        container.innerHTML = "";
 
         data.forEach(cmd => {
             container.innerHTML += `
                 <div class="card">
-                    <h3>⚡ ${cmd.commandName}</h3>
-                    <p style="font-size:14px; font-weight:normal;">${cmd.description ?? ""}</p>
+                    <h3>${escaparHtml(cmd.commandName)}</h3>
 
-                    <label style="margin-top:10px;">
+                    <label>
                         <input type="checkbox"
-                               ${cmd.enabled ? "checked" : ""}
-                               onchange="alterarStatusComando('${cmd.commandName}', this.checked)">
+                            ${cmd.enabled ? "checked" : ""}
+                            onchange="alterarStatusComando('${escaparJs(cmd.commandName)}', this.checked)">
                         Ativado
                     </label>
-
-                    <div style="margin-top:10px;">
-                        <strong>Aliases:</strong>
-                        <textarea class="edit-box"
-                            onblur="salvarAliases('${cmd.commandName}', this.value)">${(cmd.aliases || []).join(", ")}</textarea>
-                    </div>
-
-                    <div style="margin-top:10px;">
-                        <strong>Cooldown:</strong>
-                        <input type="number"
-                               value="${cmd.cooldownSeconds ?? 0}"
-                               min="0"
-                               onblur="salvarCooldown('${cmd.commandName}', this.value)">
-                    </div>
                 </div>
             `;
         });
 
-        setTimeout(() => {
-            document.querySelectorAll(".edit-box").forEach(autoResize);
-        }, 0);
     } catch (err) {
-        console.error("Erro ao carregar comandos:", err);
-        container.innerHTML = `<p style="color:red;">Erro ao carregar comandos.</p>`;
+        container.innerHTML = "Erro ao carregar comandos";
     }
 }
 
 async function alterarStatusComando(commandName, enabled) {
-    await fetch(`${API_BASE}/api/commands/${SERVER_ID}/${encodeURIComponent(commandName)}/enabled`, {
+    await fetch(`${API_BASE}/api/commands/${getServerId()}/${encodeURIComponent(commandName)}/enabled`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(enabled)
-    });
-}
-
-async function salvarAliases(commandName, valor) {
-    const aliases = valor
-        .split(",")
-        .map(x => x.trim())
-        .filter(x => x.length > 0);
-
-    await fetch(`${API_BASE}/api/commands/${SERVER_ID}/${encodeURIComponent(commandName)}/aliases`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(aliases)
-    });
-}
-
-async function salvarCooldown(commandName, valor) {
-    const cooldown = parseInt(valor) || 0;
-
-    await fetch(`${API_BASE}/api/commands/${SERVER_ID}/${encodeURIComponent(commandName)}/cooldown`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cooldown)
     });
 }
 
@@ -552,10 +673,7 @@ async function salvarCooldown(commandName, valor) {
 // =========================
 
 function fecharMenu() {
-    const sidebar = document.querySelector(".sidebar");
-    if (sidebar) {
-        sidebar.classList.remove("closed");
-    }
+    document.querySelector(".sidebar")?.classList.remove("closed");
 }
 
 // =========================
@@ -563,49 +681,55 @@ function fecharMenu() {
 // =========================
 
 document.addEventListener("DOMContentLoaded", () => {
-    const sidebar = document.querySelector(".sidebar");
     const toggle = document.getElementById("menu-toggle");
+    const sidebar = document.querySelector(".sidebar");
+
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
+    const inviteBotBtn = document.getElementById("invite-bot-btn");
+
     const btnDashboard = document.getElementById("btn-dashboard");
     const btnServidor = document.getElementById("btn-servidor");
     const btnComandos = document.getElementById("btn-comandos");
-    const confirmDeleteBtn = document.getElementById("confirm-delete");
+
+    if (loginBtn) loginBtn.addEventListener("click", iniciarLoginDiscord);
+    if (logoutBtn) logoutBtn.addEventListener("click", logout);
+
+    if (inviteBotBtn) {
+        inviteBotBtn.addEventListener("click", adicionarBotAoServidor);
+    }
 
     if (btnDashboard) {
-        btnDashboard.addEventListener("click", (e) => {
+        btnDashboard.onclick = (e) => {
             e.preventDefault();
             carregarDashboard();
-        });
+        };
     }
 
     if (btnServidor) {
-        btnServidor.addEventListener("click", (e) => {
+        btnServidor.onclick = (e) => {
             e.preventDefault();
             carregarServidor();
-        });
+        };
     }
 
     if (btnComandos) {
-        btnComandos.addEventListener("click", (e) => {
+        btnComandos.onclick = (e) => {
             e.preventDefault();
             carregarComandos();
-        });
-    }
-
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener("click", async () => {
-            if (!deleteData) return;
-
-            await deletarResposta(deleteData.trigger, deleteData.index);
-            fecharModal();
-        });
+        };
     }
 
     if (toggle && sidebar) {
-        toggle.addEventListener("click", () => {
-            sidebar.classList.toggle("closed");
-        });
+        toggle.onclick = () => sidebar.classList.toggle("closed");
     }
 
-    loadStats();
-    setInterval(loadStats, 5000);
+    mostrarTela("loading-screen");
+    verificarSessao();
+
+    setInterval(() => {
+        if (!document.getElementById("app-screen")?.classList.contains("hidden")) {
+            loadStats();
+        }
+    }, 5000);
 });

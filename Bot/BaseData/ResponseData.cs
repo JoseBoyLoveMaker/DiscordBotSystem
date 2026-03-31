@@ -6,7 +6,12 @@ public class ResponseData
     [BsonId]
     public ObjectId Id { get; set; }
 
+    [BsonElement("guildId")]
+    public ulong GuildId { get; set; }
+
+    [BsonElement("trigger")]
     public string Trigger { get; set; } = "";
 
+    [BsonElement("responses")]
     public List<string> Responses { get; set; } = new();
 }

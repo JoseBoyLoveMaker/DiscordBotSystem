@@ -1,5 +1,17 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Limpa as fontes padrão e carrega os appsettings da pasta Settings
+builder.Configuration.Sources.Clear();
+
+builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("Settings/appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile(
+        $"Settings/appsettings.{builder.Environment.EnvironmentName}.json",
+        optional: true,
+        reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -13,13 +25,27 @@ if (mongoSettings == null)
     throw new Exception("MongoSettings não foi encontrado no appsettings.json da API.");
 }
 
+var discordOAuthSettings = builder.Configuration
+    .GetSection("DiscordOAuth")
+    .Get<DiscordOAuthSettings>();
+
+if (discordOAuthSettings == null)
+{
+    throw new Exception("DiscordOAuth não foi encontrado no appsettings.json da API.");
+}
+
 builder.Services.AddSingleton(mongoSettings);
+builder.Services.AddSingleton(discordOAuthSettings);
+
 builder.Services.AddSingleton<MongoHandlerAPI>();
 
 builder.Services.AddScoped<UserServiceAPI>();
 builder.Services.AddScoped<ResponseServiceAPI>();
 builder.Services.AddScoped<BotStatusServiceAPI>();
 builder.Services.AddScoped<CommandServiceAPI>();
+
+builder.Services.AddSingleton<UserSessionStore>();
+builder.Services.AddHttpClient<DiscordAuthService>();
 
 builder.Services.AddCors(options =>
 {
@@ -30,9 +56,11 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5500",
                 "http://localhost:5500",
                 "https://localhost:7296"
+                
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 

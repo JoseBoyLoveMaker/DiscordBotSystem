@@ -7,10 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="appsettings.Development.json">
+    <Content Remove="Settings\appsettings.Development.json" />
+    <Content Remove="Settings\appsettings.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Settings\appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="appsettings.json">
+    <None Include="Settings\appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

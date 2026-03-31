@@ -157,7 +157,7 @@ public class MessageHandler
                 }
             }
 
-            var reply = await _mongo.ResponseService.GetRandomResponse(content);
+            var reply = await _mongo.ResponseService.GetRandomResponse(guildId, content);
 
             if (reply != null)
                 await message.Channel.SendMessageAsync(reply);
