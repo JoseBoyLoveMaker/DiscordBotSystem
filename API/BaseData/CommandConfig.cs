@@ -23,4 +23,7 @@ public class CommandConfigAPI
 
     [BsonElement("cooldownSeconds")]
     public int CooldownSeconds { get; set; } = 0;
+
+    [BsonElement("isVip")]
+    public bool IsVip { get; set; } = false;
 }

@@ -5,36 +5,44 @@ public class MathCommand
 {
     private readonly ExpressionDiceService _expressionDice = new();
 
-    // Método para lidar com mensagens que começam com "m" e avaliar expressões matemáticas
     public async Task ExecuteAsync(SocketMessage message)
     {
-        string input = message.Content.Trim();
+        string content = message.Content.Trim();
+        var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        if (!input.StartsWith("m"))
+        if (parts.Length < 2)
+        {
+            await message.Channel.SendMessageAsync(
+                "❌ Escreva uma expressão. Ex: `!math 2+3*4`",
+                messageReference: new MessageReference(message.Id)
+            );
             return;
+        }
 
-        string expression = input.Substring(1).Trim();
+        // pega tudo depois do nome/alias do comando
+        string expression = content.Substring(parts[0].Length).Trim();
 
         if (string.IsNullOrWhiteSpace(expression))
         {
             await message.Channel.SendMessageAsync(
-                "❌ Escreva uma expressão. Ex: `m2+3*4`",
+                "❌ Escreva uma expressão. Ex: `!math 2+3*4`",
                 messageReference: new MessageReference(message.Id)
             );
             return;
         }
 
-        // Verifica se a expressão contém caracteres de dados, o que não é permitido
-        if (expression.Contains('d') || expression.Contains('#') || expression.Contains('!'))
+        // matemática pura: sem dados
+        if (expression.Contains('d') || expression.Contains('D') ||
+            expression.Contains('#') || expression.Contains('!') ||
+            expression.Contains('a') || expression.Contains('A'))
         {
             await message.Channel.SendMessageAsync(
-                "❌ O comando `m` aceita apenas matemática, sem dados.",
+                "❌ O comando de matemática aceita apenas matemática, sem dados.",
                 messageReference: new MessageReference(message.Id)
             );
             return;
         }
 
-        // Avalia a expressão matemática e envia o resultado
         try
         {
             string result = _expressionDice.EvaluateMathOnly(expression);
@@ -44,7 +52,6 @@ public class MathCommand
                 messageReference: new MessageReference(message.Id)
             );
         }
-        // Mostra erro de expressão inválida
         catch (Exception ex)
         {
             await message.Channel.SendMessageAsync(

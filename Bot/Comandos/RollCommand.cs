@@ -8,15 +8,30 @@ public class RollCommand
 
     public async Task ExecuteAsync(SocketMessage message)
     {
-        // ignora mensagens que não começam com "q"
-        string input = message.Content.Trim();
+        string content = message.Content.Trim();
+        var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        if (!input.StartsWith("q"))
+        if (parts.Length < 2)
+        {
+            await message.Channel.SendMessageAsync(
+                "❌ Use o comando corretamente. Ex: `!roll 1d20+5`",
+                messageReference: new MessageReference(message.Id)
+            );
             return;
+        }
 
-        string expression = input.Substring(1).Trim();
+        // pega tudo depois do nome/alias do comando
+        string expression = content.Substring(parts[0].Length).Trim();
 
-        // avalia a expressão e envia o resultado
+        if (string.IsNullOrWhiteSpace(expression))
+        {
+            await message.Channel.SendMessageAsync(
+                "❌ Escreva uma expressão de dados. Ex: `!roll 1d20+5`",
+                messageReference: new MessageReference(message.Id)
+            );
+            return;
+        }
+
         try
         {
             string outputText = _expressionDice.Evaluate(expression);
@@ -26,8 +41,6 @@ public class RollCommand
                 messageReference: new MessageReference(message.Id)
             );
         }
-
-        // mostra erro de expressão inválida
         catch (Exception ex)
         {
             await message.Channel.SendMessageAsync(

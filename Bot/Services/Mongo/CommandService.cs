@@ -81,10 +81,35 @@ public class CommandService
     {
         input = input.ToLower();
 
-        return await _commands.Find(x =>
+        // 1) tenta achar primeiro no servidor local
+        var localCommand = await _commands.Find(x =>
             x.GuildId == guildId &&
-            x.Enabled &&
             (x.CommandName == input || x.Aliases.Contains(input))
         ).FirstOrDefaultAsync();
+
+        if (localCommand != null)
+            return localCommand;
+
+        // 2) tenta achar no global
+        var globalCommand = await _commands.Find(x =>
+            x.GuildId == 0 &&
+            (x.CommandName == input || x.Aliases.Contains(input))
+        ).FirstOrDefaultAsync();
+
+        if (globalCommand == null)
+            return null;
+
+        // 3) se achou no global, verifica se existe override local
+        // pelo nome real do comando global
+        var localOverride = await _commands.Find(x =>
+            x.GuildId == guildId &&
+            x.CommandName == globalCommand.CommandName
+        ).FirstOrDefaultAsync();
+
+        if (localOverride != null)
+            return localOverride;
+
+        // 4) se não houver override local, usa o global
+        return globalCommand;
     }
 }

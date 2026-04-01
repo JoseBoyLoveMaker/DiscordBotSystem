@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using System.Text.RegularExpressions;
 
 public class MessageHandler
 {
@@ -47,8 +48,6 @@ public class MessageHandler
             if (string.IsNullOrWhiteSpace(content))
                 return;
 
-            string lowerContent = content.ToLower();
-
             var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
                 return;
@@ -64,72 +63,87 @@ public class MessageHandler
 
             await _mongo.GuildUserService.GetOrCreateUser(guildId, userId, userName);
 
-            CommandConfig? resolvedCommand = await _mongo.CommandService.ResolveCommand(guild.Id, commandInput);
+            CommandConfig? resolvedCommand = await _mongo.CommandService.ResolveCommand(guildId, commandInput);
 
-            if (resolvedCommand != null)
+            Console.WriteLine($"[CMD] input: {commandInput}");
+            Console.WriteLine($"[CMD] resolved: {(resolvedCommand == null ? "null" : resolvedCommand.CommandName)}");
+            Console.WriteLine($"[CMD] resolved guildId: {(resolvedCommand == null ? "null" : resolvedCommand.GuildId)}");
+            Console.WriteLine($"[CMD] enabled: {(resolvedCommand == null ? "null" : resolvedCommand.Enabled)}");
+
+            // Se existir no banco, usa o nome real do comando.
+            // Se não existir, usa o que o usuário digitou como fallback.
+            string commandName = resolvedCommand?.CommandName?.ToLower() ?? commandInput;
+
+            Console.WriteLine($"[CMD] final commandName: {commandName}");
+
+            // Se o comando existir no banco e estiver desativado, bloqueia.
+            if (resolvedCommand != null && !resolvedCommand.Enabled)
             {
-                switch (resolvedCommand.CommandName.ToLower())
-                {
-                    case "top":
-                        await _topCommand.ExecuteTopAsync(message, guild);
-                        return;
+                await message.Channel.SendMessageAsync("Esse comando está desativado neste servidor.");
+                return;
+            }
 
-                    case "toptxt":
-                        await _topCommand.ExecuteTopTxtAsync(message, guild);
-                        return;
+            switch (commandName)
+            {
+                case "top":
+                    await _topCommand.ExecuteTopAsync(message, guild);
+                    return;
 
-                    case "topvoz":
-                        await _topCommand.ExecuteTopVozAsync(message, guild);
-                        return;
+                case "toptxt":
+                    await _topCommand.ExecuteTopTxtAsync(message, guild);
+                    return;
 
-                    case "rank":
-                        await _rankCommand.ExecuteAsync(message);
-                        return;
+                case "topvoz":
+                    await _topCommand.ExecuteTopVozAsync(message, guild);
+                    return;
 
-                    case "elden":
-                        await _eldenCommand.ExecuteAsync(message);
-                        return;
+                case "rank":
+                    await _rankCommand.ExecuteAsync(message);
+                    return;
 
-                    case "roll":
+                case "elden":
+                    await _eldenCommand.ExecuteAsync(message);
+                    return;
+
+                case "roll":
+                    {
+                        string expr = content.Substring(parts[0].Length).Trim();
+
+                        if (string.IsNullOrWhiteSpace(expr))
                         {
-                            string expr = content.Substring(parts[0].Length).Trim();
-
-                            if (string.IsNullOrWhiteSpace(expr))
-                            {
-                                await message.Channel.SendMessageAsync("Use o comando com uma expressão. Exemplo: `q 1d20+5`");
-                                return;
-                            }
-
-                            if (System.Text.RegularExpressions.Regex.IsMatch(expr.ToLower(), @"^[\dd+\-*/().#!^z%a ]+$"))
-                            {
-                                await _rollCommand.ExecuteAsync(message);
-                                return;
-                            }
-
-                            await message.Channel.SendMessageAsync("Expressão de dado inválida.");
+                            await message.Channel.SendMessageAsync("Use o comando com uma expressão. Exemplo: `!roll 1d20+5`");
                             return;
                         }
 
-                    case "math":
+                        if (Regex.IsMatch(expr.ToLower(), @"^[0-9d+\-*/().#!^z%a\s#]+$"))
                         {
-                            string expr = content.Substring(parts[0].Length).Trim();
-
-                            if (string.IsNullOrWhiteSpace(expr))
-                            {
-                                await message.Channel.SendMessageAsync("Use o comando com uma expressão. Exemplo: `a 2+2*5`");
-                                return;
-                            }
-
-                            if (System.Text.RegularExpressions.Regex.IsMatch(expr.ToLower(), @"^[\dd+\-*/().#!^z%a ]+$"))
-                            {
-                                await _mathCommand.ExecuteAsync(message);
-                                return;
-                            }
-
-                            await message.Channel.SendMessageAsync("Expressão matemática inválida.");
+                            await _rollCommand.ExecuteAsync(message);
                             return;
                         }
-                }
+
+                        await message.Channel.SendMessageAsync("Expressão de dado inválida.");
+                        return;
+                    }
+
+                case "math":
+                    {
+                        string expr = content.Substring(parts[0].Length).Trim();
+
+                        if (string.IsNullOrWhiteSpace(expr))
+                        {
+                            await message.Channel.SendMessageAsync("Use o comando com uma expressão. Exemplo: `!math 2+2*5`");
+                            return;
+                        }
+
+                        if (Regex.IsMatch(expr.ToLower(), @"^[0-9+\-*/().^z%\s]+$"))
+                        {
+                            await _mathCommand.ExecuteAsync(message);
+                            return;
+                        }
+
+                        await message.Channel.SendMessageAsync("Expressão matemática inválida.");
+                        return;
+                    }
             }
 
             if (content.Length >= 5 && content.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length >= 2)
