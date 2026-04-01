@@ -50,33 +50,51 @@ function escaparJs(texto) {
 }
 
 async function fetchJson(url, options = {}) {
-    const finalOptions = {
-        credentials: "include",
-        ...options,
-        headers: {
-            ...(options.headers || {})
+    const controller = new AbortController();
+    const timeoutMs = options.timeoutMs ?? 8000;
+
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, timeoutMs);
+
+    try {
+        const finalOptions = {
+            credentials: "include",
+            ...options,
+            signal: controller.signal,
+            headers: {
+                ...(options.headers || {})
+            }
+        };
+
+        const res = await fetch(url, finalOptions);
+
+        if (!res.ok) {
+            let body = "";
+            try {
+                body = await res.text();
+            } catch {
+                body = "";
+            }
+
+            throw new Error(`HTTP ${res.status} - ${body || "Erro na requisição"}`);
         }
-    };
 
-    const res = await fetch(url, finalOptions);
-
-    if (!res.ok) {
-        let body = "";
-        try {
-            body = await res.text();
-        } catch {
-            body = "";
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+            return await res.json();
         }
 
-        throw new Error(`HTTP ${res.status} - ${body || "Erro na requisição"}`);
-    }
+        return null;
+    } catch (err) {
+        if (err.name === "AbortError") {
+            throw new Error(`Timeout ao acessar ${url}`);
+        }
 
-    const contentType = res.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
-        return await res.json();
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
     }
-
-    return null;
 }
 
 // =========================
@@ -85,7 +103,11 @@ async function fetchJson(url, options = {}) {
 
 async function verificarSessao() {
     try {
-        const user = await fetchJson(`${API_BASE}/auth/me`);
+        console.log("[AUTH] Verificando sessão...");
+
+        const user = await fetchJson(`${API_BASE}/auth/me`, { timeoutMs: 7000 });
+
+        console.log("[AUTH] Sessão encontrada:", user);
 
         currentUser = user;
         preencherUsuario(user);
@@ -95,7 +117,7 @@ async function verificarSessao() {
         mostrarTela("app-screen");
         carregarDashboard();
     } catch (err) {
-        console.error("Erro ao verificar sessão:", err);
+        console.error("[AUTH] Sessão não encontrada ou erro:", err);
         mostrarTela("auth-screen");
     }
 }
@@ -959,8 +981,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnComandos = document.getElementById("btn-comandos");
 
     if (loginBtn) {
-    loginBtn.onclick = iniciarLoginDiscord;
+        loginBtn.onclick = iniciarLoginDiscord;
     }
+
     if (logoutBtn) logoutBtn.addEventListener("click", logout);
     if (inviteBotBtn) inviteBotBtn.addEventListener("click", adicionarBotAoServidor);
 
@@ -992,6 +1015,15 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("API_BASE atual:", API_BASE);
 
     mostrarTela("loading-screen");
+
+    setTimeout(() => {
+        const loadingScreen = document.getElementById("loading-screen");
+        if (loadingScreen && !loadingScreen.classList.contains("hidden")) {
+            console.warn("[AUTH] Loading demorou demais. Indo para auth-screen.");
+            mostrarTela("auth-screen");
+        }
+    }, 9000);
+
     verificarSessao();
 
     setInterval(() => {
