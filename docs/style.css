@@ -738,9 +738,9 @@ body {
         max-height: none;
         min-height: 100px;
     }
-
+}
     /* =========================
-   NOVA RESPONSE
+    NOVA RESPONSE
 ========================= */
 
 .details-add-response-box {
@@ -1111,6 +1111,4 @@ body {
     #commands-list .command-card-header p {
         font-size: 16px !important;
     }
-}
-
 }
