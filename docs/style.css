@@ -376,6 +376,60 @@ body {
 }
 
 /* =========================
+   GUIDE BOX (DASHBOARD)
+========================= */
+
+.guide-box {
+    margin-top: 30px;
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.08), #1e293b);
+    border: 1px solid #334155;
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.25);
+}
+
+.guide-box h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #38bdf8;
+}
+
+.guide-section {
+    margin-bottom: 20px;
+    padding: 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+}
+
+.guide-section h3 {
+    margin-top: 0;
+    color: #e2e8f0;
+    font-size: 16px;
+}
+
+.guide-section p {
+    color: #94a3b8;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.guide-section ul {
+    padding-left: 18px;
+    margin: 0;
+}
+
+.guide-section li {
+    font-size: 14px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.guide-section b {
+    color: #38bdf8;
+}
+
+/* =========================
    MODAL
 ========================= */
 
