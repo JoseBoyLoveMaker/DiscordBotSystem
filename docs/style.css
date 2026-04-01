@@ -1101,3 +1101,64 @@ body {
         font-size: 16px !important;
     }
 }
+
+#commands-list .command-more-btn {
+    margin-top: 10px;
+    background: transparent;
+    color: #38bdf8;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    transition: 0.18s ease;
+}
+
+#commands-list .command-more-btn:hover {
+    background: #0f172a;
+    border-color: #38bdf8;
+}
+
+#commands-list .command-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#commands-list .command-detail-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+}
+
+#commands-list .command-detail-symbol {
+    font-size: 13px;
+    font-weight: 800;
+    color: #38bdf8;
+    background: #111c31;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 6px 8px;
+    text-align: center;
+}
+
+#commands-list .command-detail-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: #cbd5e1;
+}
+
+@media (max-width: 700px) {
+    #commands-list .command-detail-row {
+        grid-template-columns: 1fr;
+    }
+}
