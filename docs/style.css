@@ -977,4 +977,140 @@ body {
     }
 }
 
+/* =========================
+   OVERRIDE VISUAL DOS COMANDOS
+========================= */
+
+#commands-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+    gap: 20px !important;
+    align-items: start !important;
+}
+
+#commands-list .command-card {
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, rgba(30, 41, 59, 1) 42%) !important;
+    border: 1px solid #334155 !important;
+    border-radius: 18px !important;
+    padding: 18px !important;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22) !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+}
+
+#commands-list .command-card:hover {
+    transform: translateY(-4px) !important;
+    border-color: #475569 !important;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28) !important;
+}
+
+#commands-list .command-card-header {
+    margin-bottom: 16px !important;
+    padding-bottom: 14px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+#commands-list .command-card-header h3 {
+    margin: 0 0 8px 0 !important;
+    color: #38bdf8 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-transform: lowercase !important;
+    letter-spacing: 0.04em !important;
+}
+
+#commands-list .command-card-header p {
+    margin: 0 !important;
+    color: #f8fafc !important;
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+
+#commands-list .command-card-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+}
+
+#commands-list .command-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: fit-content !important;
+    padding: 7px 12px !important;
+    border-radius: 999px !important;
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #e2e8f0 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+#commands-list .command-toggle input[type="checkbox"] {
+    accent-color: #38bdf8;
+}
+
+#commands-list .command-field {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 14px !important;
+    padding: 12px !important;
+}
+
+#commands-list .command-field label {
+    margin: 0 !important;
+    color: #e2e8f0 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+#commands-list .trigger-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    background: #111c31 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 10px !important;
+    color: #f8fafc !important;
+    padding: 11px 13px !important;
+}
+
+#commands-list .trigger-input:focus {
+    outline: none !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14) !important;
+}
+
+#commands-list .secondary-btn {
+    align-self: flex-start !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+@media (max-width: 900px) {
+    #commands-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 700px) {
+    #commands-list {
+        grid-template-columns: 1fr !important;
+    }
+
+    #commands-list .secondary-btn {
+        width: 100% !important;
+    }
+
+    #commands-list .command-card-header p {
+        font-size: 16px !important;
+    }
+}
+
 }
