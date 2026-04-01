@@ -789,7 +789,7 @@ function carregarComandos() {
     carregarListaComandos();
 }
 
-aasync function carregarListaComandos() {
+async function carregarListaComandos() {
     const container = document.getElementById("commands-list");
     if (!container) return;
 
