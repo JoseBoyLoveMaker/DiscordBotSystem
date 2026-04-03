@@ -1151,58 +1151,6 @@ async function alterarCooldownComando(commandName) {
     }
 }
 
-function getShortCommandDescription(name, fallbackDescription) {
-    const map = {
-        roll: "Rola dados avançados para RPG, testes e cálculos. Aceita expressões como 1d20, 2d6+3, 4d10!, 3#1d20+5 e combinações com operações matemáticas.",
-        math: "Resolve expressões matemáticas avançadas. Aceita operações básicas, potência, raiz, porcentagem e parênteses. Não aceita dados."
-    };
-
-    return map[name] || fallbackDescription || "Sem descrição.";
-}
-
-function getCommandDetails(name) {
-    const map = {
-        roll: [
-            { symbol: "d", text: "Define um dado. Ex: 1d20 = 1 dado de 20 lados; 2d6 = 2 dados de 6 lados." },
-            { symbol: "!", text: "Explosão de dado. Se o resultado atingir o limite, rola de novo e soma. Ex: 1d6!." },
-            { symbol: "!N", text: "Explosão com limite personalizado. Ex: 1d10!8 explode em 8, 9 ou 10." },
-            { symbol: "a", text: "Embaralha a ordem dos resultados em vez de ordenar do maior para o menor. Ex: 4d6a." },
-            { symbol: "#", text: "Repete a mesma rolagem várias vezes. Ex: 3#1d20+5." },
-            { symbol: "+ - * /", text: "Operações matemáticas básicas. Ex: 2d6+3, 1d8*2." },
-            { symbol: "()", text: "Agrupa partes da conta. Ex: (2d6+4)*2." },
-            { symbol: "^", text: "Potência. Ex: 2^3 = 8." },
-            { symbol: "z", text: "Raiz com índice. Ex: 9z2 = 3; 27z3 = 3." },
-            { symbol: "%", text: "Porcentagem de um valor. Ex: 50%200 = 100." }
-        ],
-        math: [
-            { symbol: "+", text: "Soma." },
-            { symbol: "-", text: "Subtração." },
-            { symbol: "*", text: "Multiplicação." },
-            { symbol: "/", text: "Divisão." },
-            { symbol: "()", text: "Define prioridade de cálculo. Ex: (2+3)*4." },
-            { symbol: "^", text: "Potência. Ex: 2^4 = 16." },
-            { symbol: "z", text: "Raiz com índice. Ex: 16z2 = 4; 27z3 = 3." },
-            { symbol: "%", text: "Porcentagem de um valor. Ex: 25%200 = 50." }
-        ]
-    };
-
-    return map[name] || [];
-}
-
-function toggleCommandDetails(commandName) {
-    const box = document.getElementById(`details-${commandName}`);
-    const btn = document.getElementById(`details-btn-${commandName}`);
-
-    if (!box) return;
-
-    const isHidden = box.classList.contains("hidden");
-    box.classList.toggle("hidden");
-
-    if (btn) {
-        btn.textContent = isHidden ? "Ver menos" : "Ver mais";
-    }
-}
-
 // =========================
 // MENU
 // =========================
