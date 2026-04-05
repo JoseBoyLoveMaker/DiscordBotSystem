@@ -8,11 +8,16 @@ public class GuildsController : ControllerBase
 
     private readonly UserSessionStore _sessionStore;
     private readonly DiscordAuthService _discordAuthService;
+    private readonly GuildConfigService _guildConfigService;
 
-    public GuildsController(UserSessionStore sessionStore, DiscordAuthService discordAuthService)
+    public GuildsController(
+        UserSessionStore sessionStore,
+        DiscordAuthService discordAuthService,
+        GuildConfigService guildConfigService)
     {
         _sessionStore = sessionStore;
         _discordAuthService = discordAuthService;
+        _guildConfigService = guildConfigService;
     }
 
     [HttpGet]
@@ -41,6 +46,38 @@ public class GuildsController : ControllerBase
             .ToList();
 
         return Ok(result);
+    }
+
+    [HttpGet("{guildId}/channels")]
+    public async Task<IActionResult> GetChannels(ulong guildId)
+    {
+        var config = await _guildConfigService.GetOrCreateConfig(guildId);
+
+        var channels = (config.AvailableChannels ?? new List<GuildChannelInfo>())
+            .Select(c => new
+            {
+                id = c.Id.ToString(),
+                name = c.Name
+            })
+            .ToList();
+
+        return Ok(channels);
+    }
+
+    [HttpGet("{guildId}/roles")]
+    public async Task<IActionResult> GetRoles(ulong guildId)
+    {
+        var config = await _guildConfigService.GetOrCreateConfig(guildId);
+
+        var roles = (config.AvailableRoles ?? new List<GuildRoleInfo>())
+            .Select(r => new
+            {
+                id = r.Id.ToString(),
+                name = r.Name
+            })
+            .ToList();
+
+        return Ok(roles);
     }
 
     private static bool HasManageGuildPermission(ulong permissions)

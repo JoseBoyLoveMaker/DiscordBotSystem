@@ -11,6 +11,7 @@ class Bot
     private ButtonHandler _buttonHandler = null!;
     private VoiceHandler _voiceHandler = null!;
     private MessageHandler _messageHandler = null!;
+    private GuildConfigSyncService _guildConfigSyncService = null!;
 
     public Bot(IConfiguration configuration)
     {
@@ -47,11 +48,18 @@ class Bot
             throw new Exception("Discord:Token não configurado.");
 
         _mongo = new MongoHandler(mongoSettings);
+        _guildConfigSyncService = new GuildConfigSyncService(_mongo.GuildConfigService);
 
         _client.Ready += OnReady;
         _client.Log += Log;
         _client.UserJoined += OnUserJoined;
         _client.UserLeft += OnUserLeft;
+
+        _client.Ready += async () =>
+        {
+            Console.WriteLine("Bot pronto. Sincronizando guilds...");
+            await _guildConfigSyncService.SyncAllGuildsAsync(_client);
+        };
 
         _messageHandler = new MessageHandler(_mongo);
         _client.MessageReceived += _messageHandler.HandleAsync;
@@ -62,6 +70,12 @@ class Bot
         _buttonHandler = new ButtonHandler(_mongo);
         _client.ButtonExecuted += _buttonHandler.HandleAsync;
         _client.SelectMenuExecuted += _buttonHandler.HandleAsync;
+
+        _client.JoinedGuild += async guild =>
+        {
+            Console.WriteLine($"Entrou em novo servidor: {guild.Name}");
+            await _guildConfigSyncService.SyncGuildAsync(guild);
+        };
 
         await _client.LoginAsync(TokenType.Bot, discordSettings.Token);
         await _client.StartAsync();
@@ -104,21 +118,14 @@ class Bot
         Console.WriteLine(msg);
         return Task.CompletedTask;
     }
+
     private async Task OnUserJoined(SocketGuildUser user)
     {
         Console.WriteLine($"{user.Username} entrou no servidor {user.Guild.Name}");
-
-        // depois aqui puxar config do banco:
-        // - mensagem de boas-vindas
-        // - cargo automático
     }
 
     private async Task OnUserLeft(SocketGuild guild, SocketUser user)
     {
         Console.WriteLine($"{user.Username} saiu do servidor {guild.Name}");
-
-        // depois aqui puxar config do banco:
-        // - mensagem de saída personalizada
     }
-
 }

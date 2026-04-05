@@ -38,6 +38,12 @@ public class GuildConfig
     [BsonElement("prefix")]
     public string Prefix { get; set; } = "!";
 
+    [BsonElement("availableChannels")]
+    public List<GuildChannelInfo> AvailableChannels { get; set; } = new();
+
+    [BsonElement("availableRoles")]
+    public List<GuildRoleInfo> AvailableRoles { get; set; } = new();
+
     [BsonElement("welcome")]
     public WelcomeConfig Welcome { get; set; } = new();
 
@@ -46,4 +52,16 @@ public class GuildConfig
 
     [BsonElement("roles")]
     public RoleConfig Roles { get; set; } = new();
+}
+
+public class GuildChannelInfo
+{
+    public ulong Id { get; set; }
+    public string Name { get; set; } = "";
+}
+
+public class GuildRoleInfo
+{
+    public ulong Id { get; set; }
+    public string Name { get; set; } = "";
 }
