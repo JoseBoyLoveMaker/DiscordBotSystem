@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-class Program
+class BotMain
 {
     static async Task Main(string[] args)
     {

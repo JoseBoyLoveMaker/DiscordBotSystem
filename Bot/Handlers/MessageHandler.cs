@@ -60,6 +60,7 @@ public class MessageHandler
             ulong guildId = guild.Id;
             ulong userId = message.Author.Id;
             string userName = message.Author.Username;
+            var guildUserSocket = guild.GetUser(userId);
 
             await _mongo.GuildUserService.GetOrCreateUser(guildId, userId, userName);
 
@@ -167,6 +168,13 @@ public class MessageHandler
                         await message.Channel.SendMessageAsync(
                             $"🎉 {message.Author.Mention} subiu para o nível **{guildUser.ChatLevel}** de chat!"
                         );
+
+                        var config = await _mongo.GuildConfigService.GetOrCreateConfig(guild.Id, guild.Name);
+
+                        if (guildUserSocket != null)
+                        {
+                            await CheckLevelRoles(guildUserSocket, guildUser, config);
+                        }
                     }
                 }
             }
@@ -180,6 +188,35 @@ public class MessageHandler
         {
             Console.WriteLine("Erro no MessageHandler:");
             Console.WriteLine(ex);
+        }
+    }
+
+    private async Task CheckLevelRoles(SocketGuildUser user, GuildUserData data, GuildConfig config)
+    {
+        if (config.Roles?.LevelRoles == null || config.Roles.LevelRoles.Count == 0)
+            return;
+
+        foreach (var reward in config.Roles.LevelRoles)
+        {
+            var role = user.Guild.GetRole(reward.RoleId);
+
+            if (role == null)
+                continue;
+
+            bool qualifies =
+                data.ChatLevel >= reward.MinChatLevel &&
+                data.CallLevel >= reward.MinCallLevel;
+
+            if (qualifies)
+            {
+                if (!user.Roles.Any(r => r.Id == role.Id))
+                    await user.AddRoleAsync(role);
+            }
+            else
+            {
+                if (user.Roles.Any(r => r.Id == role.Id))
+                    await user.RemoveRoleAsync(role);
+            }
         }
     }
 }

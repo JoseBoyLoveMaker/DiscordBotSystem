@@ -98,7 +98,7 @@ public class VoiceHandler
 
                                 int xp = rand.Next(8, 15);
 
-                                await _mongo.GuildUserService.AddCallXp(
+                                bool levelUp = await _mongo.GuildUserService.AddCallXp(
                                     guild.Id,
                                     user.Id,
                                     user.Username,
@@ -106,6 +106,22 @@ public class VoiceHandler
                                 );
 
                                 Console.WriteLine($"+{xp} CallXP para {user.Username} na call {user.VoiceChannel.Name} no servidor {guild.Name}");
+
+                                if (levelUp)
+                                {
+                                    var guildUser = await _mongo.GuildUserService.GetOrCreateUser(
+                                        guild.Id,
+                                        user.Id,
+                                        user.Username
+                                    );
+
+                                    var config = await _mongo.GuildConfigService.GetOrCreateConfig(
+                                        guild.Id,
+                                        guild.Name
+                                    );
+
+                                    await CheckLevelRoles(user, guildUser, config);
+                                }
                             }
                         }
                     }
@@ -119,5 +135,34 @@ public class VoiceHandler
                 await Task.Delay(60000);
             }
         });
+    }
+
+    private async Task CheckLevelRoles(SocketGuildUser user, GuildUserData data, GuildConfig config)
+    {
+        if (config.Roles?.LevelRoles == null || config.Roles.LevelRoles.Count == 0)
+            return;
+
+        foreach (var reward in config.Roles.LevelRoles)
+        {
+            var role = user.Guild.GetRole(reward.RoleId);
+
+            if (role == null)
+                continue;
+
+            bool qualifies =
+                data.ChatLevel >= reward.MinChatLevel &&
+                data.CallLevel >= reward.MinCallLevel;
+
+            if (qualifies)
+            {
+                if (!user.Roles.Any(r => r.Id == role.Id))
+                    await user.AddRoleAsync(role);
+            }
+            else
+            {
+                if (user.Roles.Any(r => r.Id == role.Id))
+                    await user.RemoveRoleAsync(role);
+            }
+        }
     }
 }

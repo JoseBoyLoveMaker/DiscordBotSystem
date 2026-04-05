@@ -50,6 +50,8 @@ class Bot
 
         _client.Ready += OnReady;
         _client.Log += Log;
+        _client.UserJoined += OnUserJoined;
+        _client.UserLeft += OnUserLeft;
 
         _messageHandler = new MessageHandler(_mongo);
         _client.MessageReceived += _messageHandler.HandleAsync;
@@ -102,4 +104,21 @@ class Bot
         Console.WriteLine(msg);
         return Task.CompletedTask;
     }
+    private async Task OnUserJoined(SocketGuildUser user)
+    {
+        Console.WriteLine($"{user.Username} entrou no servidor {user.Guild.Name}");
+
+        // depois aqui puxar config do banco:
+        // - mensagem de boas-vindas
+        // - cargo automático
+    }
+
+    private async Task OnUserLeft(SocketGuild guild, SocketUser user)
+    {
+        Console.WriteLine($"{user.Username} saiu do servidor {guild.Name}");
+
+        // depois aqui puxar config do banco:
+        // - mensagem de saída personalizada
+    }
+
 }

@@ -4,7 +4,6 @@ public class MongoHandler
 {
     private readonly IMongoDatabase _database;
 
-    public IMongoCollection<UserData> Users { get; }
     public IMongoCollection<ResponseData> Responses { get; }
     public IMongoCollection<BotStatus> BotStatus { get; }
     public IMongoCollection<CommandConfig> Commands { get; }
@@ -23,8 +22,7 @@ public class MongoHandler
     {
         var client = new MongoClient(settings.ConnectionString);
         _database = client.GetDatabase(settings.DatabaseName);
-
-        Users = _database.GetCollection<UserData>("users");
+       
         Responses = _database.GetCollection<ResponseData>("responses");
         BotStatus = _database.GetCollection<BotStatus>("Stats");
         Commands = _database.GetCollection<CommandConfig>("commands");

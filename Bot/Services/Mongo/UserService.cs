@@ -2,49 +2,52 @@
 
 public class UserService
 {
-    private readonly IMongoCollection<UserData> _users;
+    private readonly IMongoCollection<GuildUserData> _users;
 
     public UserService(MongoHandler handler)
     {
-        _users = handler.Users;
+        _users = handler.GuildUsers;
     }
 
-    // Método para obter um usuário pelo ID
-    public async Task<UserData?> GetUser(ulong userId)
+    // Obtém um usuário por guild + user
+    public async Task<GuildUserData?> GetUser(ulong guildId, ulong userId)
     {
-        return await _users.Find(x => x.UserId == userId).FirstOrDefaultAsync();
+        return await _users
+            .Find(x => x.GuildId == guildId && x.UserId == userId)
+            .FirstOrDefaultAsync();
     }
 
-    // Método para criar um novo usuário ou obter um existente
-    public async Task<UserData> GetOrCreateUser(ulong userId)
+    // Cria ou obtém usuário existente
+    public async Task<GuildUserData> GetOrCreateUser(ulong guildId, ulong userId, string userName = "")
     {
-        var user = await GetUser(userId);
+        var user = await GetUser(guildId, userId);
 
         if (user != null)
             return user;
 
-        user = new UserData
+        user = new GuildUserData
         {
+            GuildId = guildId,
             UserId = userId,
+            UserName = userName,
             ChatXp = 0,
             CallXp = 0,
             ChatLevel = 0,
             CallLevel = 0
         };
 
-        // Insere o novo usuário no banco de dados
-
         await _users.InsertOneAsync(user);
         return user;
     }
 
     // Adiciona XP de chat e retorna true se subiu de nível
-    public async Task<bool> AddChatXp(ulong userId, int xp)
+    public async Task<bool> AddChatXp(ulong guildId, ulong userId, int xp)
     {
-        var filter = Builders<UserData>.Filter.Eq(x => x.UserId, userId);
+        var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
         var user = await _users.Find(filter).FirstOrDefaultAsync();
 
-        if (user == null) return false;
+        if (user == null)
+            return false;
 
         int newXp = user.ChatXp + xp;
         int oldLevel = user.ChatLevel;
@@ -52,7 +55,7 @@ public class UserService
 
         bool levelUp = newLevel > oldLevel;
 
-        var update = Builders<UserData>.Update
+        var update = Builders<GuildUserData>.Update
             .Set(x => x.ChatXp, newXp)
             .Set(x => x.ChatLevel, newLevel);
 
@@ -61,12 +64,13 @@ public class UserService
     }
 
     // Adiciona XP de call e retorna true se subiu de nível
-    public async Task<bool> AddCallXp(ulong userId, int xp)
+    public async Task<bool> AddCallXp(ulong guildId, ulong userId, string userName, int xp)
     {
-        var filter = Builders<UserData>.Filter.Eq(x => x.UserId, userId);
+        var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
         var user = await _users.Find(filter).FirstOrDefaultAsync();
 
-        if (user == null) return false;
+        if (user == null)
+            return false;
 
         int newXp = user.CallXp + xp;
         int oldLevel = user.CallLevel;
@@ -74,7 +78,7 @@ public class UserService
 
         bool levelUp = newLevel > oldLevel;
 
-        var update = Builders<UserData>.Update
+        var update = Builders<GuildUserData>.Update
             .Set(x => x.CallXp, newXp)
             .Set(x => x.CallLevel, newLevel);
 
@@ -82,47 +86,49 @@ public class UserService
         return levelUp;
     }
 
-    // Método para obter o top de chat
-    public async Task<List<UserData>> GetTopChat(int page, int pageSize)
+    // Top de chat por servidor
+    public async Task<List<GuildUserData>> GetTopChat(ulong guildId, int page, int pageSize)
     {
         return await _users
-            .Find(_ => true)
+            .Find(x => x.GuildId == guildId)
             .SortByDescending(x => x.ChatXp)
             .Skip((page - 1) * pageSize)
             .Limit(pageSize)
             .ToListAsync();
     }
 
-    // Método para obter o top de call
-    public async Task<List<UserData>> GetTopCall(int page, int pageSize)
+    // Top de call por servidor
+    public async Task<List<GuildUserData>> GetTopCall(ulong guildId, int page, int pageSize)
     {
         return await _users
-            .Find(_ => true)
+            .Find(x => x.GuildId == guildId)
             .SortByDescending(x => x.CallXp)
             .Skip((page - 1) * pageSize)
             .Limit(pageSize)
             .ToListAsync();
     }
 
-    // Método para obter a posição de um usuário no ranking de chat
-    public async Task<int> GetChatPosition(ulong userId)
+    // Posição no ranking de chat por servidor
+    public async Task<int> GetChatPosition(ulong guildId, ulong userId)
     {
-        var user = await GetUser(userId);
+        var user = await GetUser(guildId, userId);
         if (user == null) return -1;
-        var count = await _users.CountDocumentsAsync(x => x.ChatXp > user.ChatXp);
+
+        var count = await _users.CountDocumentsAsync(x => x.GuildId == guildId && x.ChatXp > user.ChatXp);
         return (int)count + 1;
     }
 
-    // Método para obter a posição de um usuário no ranking de call
-    public async Task<int> GetCallPosition(ulong userId)
+    // Posição no ranking de call por servidor
+    public async Task<int> GetCallPosition(ulong guildId, ulong userId)
     {
-        var user = await GetUser(userId);
+        var user = await GetUser(guildId, userId);
         if (user == null) return -1;
-        var count = await _users.CountDocumentsAsync(x => x.CallXp > user.CallXp);
+
+        var count = await _users.CountDocumentsAsync(x => x.GuildId == guildId && x.CallXp > user.CallXp);
         return (int)count + 1;
     }
 
-    // Helper para calcular nível (mesma lógica do serviço anterior)
+    // Cálculo de nível
     public int CalculateLevel(int totalXp)
     {
         int level = 0;
@@ -139,12 +145,12 @@ public class UserService
         return 5 * (level * level) + 50 * level + 100;
     }
 
-    // Retorna a soma de XP necessária até o início do nível informado
     public int GetXpForLevel(int level)
     {
         int xp = 0;
         for (int i = 0; i < level; i++)
             xp += GetRequiredXp(i);
+
         return xp;
     }
 }
