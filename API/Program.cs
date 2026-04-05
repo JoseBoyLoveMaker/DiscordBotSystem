@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.HttpOverrides;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,12 +43,20 @@ if (discordOAuthSettings == null)
 builder.Services.AddSingleton(mongoSettings);
 builder.Services.AddSingleton(discordOAuthSettings);
 
+builder.Services.AddSingleton<IMongoDatabase>(sp =>
+{
+    var settings = sp.GetRequiredService<MongoSettings>();
+    var client = new MongoClient(settings.ConnectionString);
+    return client.GetDatabase(settings.DatabaseName);
+});
+
 builder.Services.AddSingleton<MongoHandlerAPI>();
 
 builder.Services.AddScoped<UserServiceAPI>();
 builder.Services.AddScoped<ResponseServiceAPI>();
 builder.Services.AddScoped<BotStatusServiceAPI>();
 builder.Services.AddScoped<CommandServiceAPI>();
+builder.Services.AddScoped<GuildConfigService>();
 
 builder.Services.AddSingleton<UserSessionStore>();
 builder.Services.AddHttpClient<DiscordAuthService>();
