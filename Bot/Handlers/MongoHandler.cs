@@ -11,6 +11,7 @@ public class MongoHandler
     public IMongoCollection<GuildConfig> GuildConfig { get; }
     public IMongoCollection<GuildUserData> GuildUsers { get; }
 
+
     public UserService UserService { get; }
     public ResponseService ResponseService { get; }
     public BotStatusService BotStatusService { get; }
