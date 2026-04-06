@@ -1,0 +1,19 @@
+.card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.card p {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.status p {
+    font-size: 20px;
+}

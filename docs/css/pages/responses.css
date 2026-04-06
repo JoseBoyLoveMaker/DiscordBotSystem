@@ -1,0 +1,16 @@
+.trigger-input {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 12px;
+    color: white;
+}
+
+.trigger-card {
+    padding: 18px;
+    background: #1e293b;
+}
+
+.trigger-delete-btn {
+    background: #ef4444;
+    border-radius: 10px;
+}

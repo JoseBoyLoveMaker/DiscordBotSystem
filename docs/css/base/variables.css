@@ -1,0 +1,23 @@
+:root {
+    --bg-body: #0f172a;
+    --bg-topbar: #020617;
+    --bg-card: #1e293b;
+    --bg-soft: #334155;
+    --bg-panel: #111c31;
+
+    --text-main: #ffffff;
+    --text-soft: #cbd5e1;
+    --text-muted: #94a3b8;
+
+    --primary: #38bdf8;
+    --primary-dark: #020617;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+
+    --border: #334155;
+
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 12px;
+    --radius-xl: 18px;
+}

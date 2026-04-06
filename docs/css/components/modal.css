@@ -1,0 +1,19 @@
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #020617;
+    padding: 20px;
+    border-radius: 12px;
+    width: 320px;
+}
+
+.btn-delete {
+    background: #ef4444;
+}

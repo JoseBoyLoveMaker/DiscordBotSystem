@@ -1,0 +1,85 @@
+.servers-strip-wrapper {
+    margin-left: 18px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+.servers-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding-bottom: 4px;
+    scroll-behavior: smooth;
+}
+
+.servers-strip::-webkit-scrollbar {
+    height: 8px;
+}
+
+.servers-strip::-webkit-scrollbar-track {
+    background: #0f172a;
+    border-radius: 999px;
+}
+
+.servers-strip::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 999px;
+}
+
+.server-pill {
+    flex: 0 0 auto;
+    background: #1e293b;
+    border: none;
+    border-radius: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: white;
+    min-height: 56px;
+}
+
+.server-pill:hover {
+    background: #273449;
+    transform: translateY(-1px);
+}
+
+.server-pill.active {
+    background: #38bdf8;
+    color: #020617;
+}
+
+.server-pill-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.server-pill-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #334155;
+    flex-shrink: 0;
+}
+
+.server-pill-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+}
+
+.server-pill-name {
+    font-size: 14px;
+    font-weight: 600;
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

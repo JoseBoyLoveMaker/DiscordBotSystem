@@ -1,0 +1,41 @@
+.discord-btn,
+.logout-btn,
+.secondary-btn,
+.back-btn {
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    padding: 12px 18px;
+    font-weight: bold;
+}
+
+.discord-btn {
+    background: #5865f2;
+    color: white;
+    margin-top: 18px;
+    width: 100%;
+}
+
+.discord-btn:hover,
+.secondary-btn:hover {
+    filter: brightness(1.08);
+}
+
+.secondary-btn {
+    background: #38bdf8;
+    color: #020617;
+}
+
+.logout-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.back-btn {
+    background: #334155;
+    color: white;
+}
+
+.back-btn:hover {
+    background: #475569;
+}

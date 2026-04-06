@@ -1,0 +1,16 @@
+.moderation-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.moderation-tab {
+    padding: 12px;
+    border-radius: 12px;
+    background: #1e293b;
+}
+
+.moderation-tab.active {
+    background: #38bdf8;
+    color: #020617;
+}
