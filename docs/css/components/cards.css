@@ -2,16 +2,25 @@
     background: #1e293b;
     border-radius: 12px;
     padding: 16px;
+    position: relative;
+}
+
+.card:hover {
+    transform: scale(1.02);
 }
 
 .card h3 {
     font-size: 14px;
     color: #94a3b8;
+    margin: 0 0 8px 0;
 }
 
 .card p {
     font-size: 28px;
     font-weight: bold;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
 }
 
 .status p {
