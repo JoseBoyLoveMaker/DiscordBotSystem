@@ -11,6 +11,4 @@ public class WelcomeConfig
     [BsonElement("message")]
     public string Message { get; set; } = "Bem-vindo {user}!";
 
-    [BsonElement("autoRoleId")]
-    public ulong AutoRoleId { get; set; }
 }

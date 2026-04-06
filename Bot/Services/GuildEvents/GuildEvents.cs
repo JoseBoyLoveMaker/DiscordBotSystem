@@ -36,7 +36,7 @@ public class GuildEvents
 
         await channel.SendMessageAsync(msg);
 
-        var roleId = config.Welcome.AutoRoleId;
+        var roleId = config.Roles.AutoRoleId;
 
         if (roleId != 0)
         {
