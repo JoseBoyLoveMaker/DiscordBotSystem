@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
+[BsonIgnoreExtraElements]
 public class WelcomeConfig
 {
     [BsonElement("enabled")]
@@ -10,5 +11,4 @@ public class WelcomeConfig
 
     [BsonElement("message")]
     public string Message { get; set; } = "Bem-vindo {user}!";
-
 }

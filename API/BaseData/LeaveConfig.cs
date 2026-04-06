@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
+[BsonIgnoreExtraElements]
 public class LeaveConfig
 {
     [BsonElement("enabled")]

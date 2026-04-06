@@ -54,14 +54,22 @@ public class GuildConfig
     public RoleConfig Roles { get; set; } = new();
 }
 
+[BsonIgnoreExtraElements]
 public class GuildChannelInfo
 {
+    [BsonElement("_id")]
     public ulong Id { get; set; }
+
+    [BsonElement("Name")]
     public string Name { get; set; } = "";
 }
 
+[BsonIgnoreExtraElements]
 public class GuildRoleInfo
 {
+    [BsonElement("_id")]
     public ulong Id { get; set; }
+
+    [BsonElement("Name")]
     public string Name { get; set; } = "";
 }
