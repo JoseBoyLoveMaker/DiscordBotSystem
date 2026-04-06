@@ -47,19 +47,21 @@ class Bot
         if (string.IsNullOrWhiteSpace(discordSettings.Token))
             throw new Exception("Discord:Token não configurado.");
 
-        _mongo = new MongoHandler(mongoSettings);
-        _guildConfigSyncService = new GuildConfigSyncService(_mongo.GuildConfigService);
-
         _client.Ready += OnReady;
         _client.Log += Log;
-        _client.UserJoined += OnUserJoined;
-        _client.UserLeft += OnUserLeft;
+
+        Console.WriteLine("Registrando eventos de entrada e saída...");
+        _mongo = new MongoHandler(mongoSettings);
+        _guildConfigSyncService = new GuildConfigSyncService(_mongo.GuildConfigService);
 
         _client.Ready += async () =>
         {
             Console.WriteLine("Bot pronto. Sincronizando guilds...");
             await _guildConfigSyncService.SyncAllGuildsAsync(_client);
         };
+
+        var guildEvents = new GuildEvents(_client, _mongo);
+        guildEvents.RegisterEvents();
 
         _messageHandler = new MessageHandler(_mongo);
         _client.MessageReceived += _messageHandler.HandleAsync;
@@ -117,15 +119,5 @@ class Bot
     {
         Console.WriteLine(msg);
         return Task.CompletedTask;
-    }
-
-    private async Task OnUserJoined(SocketGuildUser user)
-    {
-        Console.WriteLine($"{user.Username} entrou no servidor {user.Guild.Name}");
-    }
-
-    private async Task OnUserLeft(SocketGuild guild, SocketUser user)
-    {
-        Console.WriteLine($"{user.Username} saiu do servidor {guild.Name}");
     }
 }

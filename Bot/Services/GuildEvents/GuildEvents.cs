@@ -19,56 +19,77 @@ public class GuildEvents
 
     private async Task OnUserJoined(SocketGuildUser user)
     {
-        var config = await _mongo.GuildConfigService.GetOrCreateConfig(user.Guild.Id, user.Guild.Name);
+        Console.WriteLine($"[JOIN] {user.Username} entrou em {user.Guild.Name}");
 
-        if (config?.Welcome == null || !config.Welcome.Enabled)
-            return;
-
-        if (!config.Welcome.ChannelId.HasValue)
-            return;
-
-        var channel = user.Guild.GetTextChannel(config.Welcome.ChannelId.Value);
-
-        if (channel == null)
-            return;
-
-        var msg = (config.Welcome.Message ?? "Bem-vindo {user}!")
-            .Replace("{user}", user.Mention)
-            .Replace("{server}", user.Guild.Name)
-            .Replace("{memberCount}", user.Guild.MemberCount.ToString());
-
-        await channel.SendMessageAsync(msg);
-
-        var roleId = config.Roles.AutoRoleId;
-
-        if (config?.Roles?.AutoRoleId.HasValue == true)
+        try
         {
-            var role = user.Guild.GetRole(config.Roles.AutoRoleId.Value);
-            if (role != null)
+            var config = await _mongo.GuildConfigService
+                .GetOrCreateConfig(user.Guild.Id, user.Guild.Name);
+
+            // WELCOME
+            if (config?.Welcome != null && config.Welcome.Enabled)
             {
-                await user.AddRoleAsync(role);
+                if (!config.Welcome.ChannelId.HasValue)
+                    return;
+
+                var channel = user.Guild.GetTextChannel(config.Welcome.ChannelId.Value);
+
+                if (channel != null)
+                {
+                    var msg = (config.Welcome.Message ?? "Bem-vindo {user}!")
+                        .Replace("{user}", user.Mention)
+                        .Replace("{server}", user.Guild.Name)
+                        .Replace("{membercount}", user.Guild.MemberCount.ToString());
+
+                    await channel.SendMessageAsync(msg);
+                }
             }
+
+            // AUTO ROLE
+            if (config?.Roles?.AutoRoleId.HasValue == true)
+            {
+                var role = user.Guild.GetRole(config.Roles.AutoRoleId.Value);
+
+                if (role != null)
+                    await user.AddRoleAsync(role);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[JOIN ERROR] {ex}");
         }
     }
 
     private async Task OnUserLeft(SocketGuild guild, SocketUser user)
     {
-        var config = await _mongo.GuildConfigService.GetOrCreateConfig(guild.Id, guild.Name);
+        Console.WriteLine($"[LEAVE] {user.Username} saiu de {guild.Name}");
 
-        if (config?.Leave == null || !config.Leave.Enabled)
-            return;
+        try
+        {
+            var config = await _mongo.GuildConfigService
+                .GetOrCreateConfig(guild.Id, guild.Name);
 
-        if (!config.Leave.ChannelId.HasValue)
-            return;
+            if (config?.Leave != null && config.Leave.Enabled)
+            {
+                if (!config.Leave.ChannelId.HasValue)
+                    return;
 
-        var channel = guild.GetTextChannel(config.Leave.ChannelId.Value);
+                var channel = guild.GetTextChannel(config.Leave.ChannelId.Value);
 
-        if (channel == null)
-            return;
+                if (channel != null)
+                {
+                    var msg = (config.Leave.Message ?? "{user} saiu do servidor.")
+                        .Replace("{user}", user.Username)
+                        .Replace("{server}", guild.Name)
+                        .Replace("{membercount}", guild.MemberCount.ToString());
 
-        var msg = (config.Leave.Message ?? "{user} saiu do servidor.")
-            .Replace("{user}", user.Username);
-
-        await channel.SendMessageAsync(msg);
+                    await channel.SendMessageAsync(msg);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LEAVE ERROR] {ex}");
+        }
     }
 }
