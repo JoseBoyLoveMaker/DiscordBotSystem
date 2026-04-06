@@ -1,6 +1,6 @@
-import { API_BASE } from ".../core/config.js";
-import { fetchJson } from ".../core/http.js";
-import { escaparHtml } from ".../core/escape.js";
+import { API_BASE } from "../core/config.js";
+import { fetchJson } from "../core/http.js";
+import { escaparHtml } from "../core/escape.js";
 import { getServerId, carregarCanaisGuild, carregarCargosGuild } from "../guilds/guilds.ui.js";
 
 export function carregarModeracao() {

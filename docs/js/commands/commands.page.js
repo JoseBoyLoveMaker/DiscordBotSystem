@@ -1,6 +1,6 @@
-import { API_BASE } from ".../core/config.js";
-import { fetchJson } from ".../core/http.js";
-import { escaparHtml, escaparJs } from ".../core/escape.js";
+import { API_BASE } from "../core/config.js";
+import { fetchJson } from "../core/http.js";
+import { escaparHtml, escaparJs } from "../core/escape.js";
 import { getServerId } from "../guilds/guilds.ui.js";
 
 export function carregarComandos() {

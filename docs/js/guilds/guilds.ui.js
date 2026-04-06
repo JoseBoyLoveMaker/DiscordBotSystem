@@ -1,7 +1,7 @@
-import { API_BASE } from ".../core/config.js";
-import { appState } from ".../core/state.js";
-import { fetchJson } from ".../core/http.js";
-import { escaparHtml } from ".../core/escape.js";
+import { API_BASE } from "../core/config.js";
+import { appState } from "../core/state.js";
+import { fetchJson } from "../core/http.js";
+import { escaparHtml } from "../core/escape.js";
 import { carregarDashboard } from "../dashboard/dashboard.page.js";
 
 export function getServerId() {

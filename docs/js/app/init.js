@@ -1,9 +1,9 @@
-import { API_BASE } from ".../core/config.js";
-import { appState } from ".../core/state.js";
+import { API_BASE } from "../core/config.js";
+import { appState } from "../core/state.js";
 import { mostrarTela } from "../core/screens.js";
-import { fetchJson } from ".../core/http.js";
+import { fetchJson } from "../core/http.js";
 
-import { preencherUsuario } from ".../user/user.ui.js";
+import { preencherUsuario } from "../user/user.ui.js";
 import { carregarServidores } from "../guilds/guilds.ui.js";
 
 import { carregarDashboard, loadStats, adicionarBotAoServidor } from "../dashboard/dashboard.page.js";

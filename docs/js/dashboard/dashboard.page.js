@@ -1,6 +1,6 @@
-    import { API_BASE, BOT_CLIENT_ID, BOT_PERMISSIONS } from ".../core/config.js";
-import { appState } from ".../core/state.js";
-import { fetchJson } from ".../core/http.js";
+    import { API_BASE, BOT_CLIENT_ID, BOT_PERMISSIONS } from "../core/config.js";
+import { appState } from "../core/state.js";
+import { fetchJson } from "../core/http.js";
 
 export async function loadStats() {
     const usersEl = document.getElementById("users");
