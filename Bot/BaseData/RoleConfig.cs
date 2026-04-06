@@ -6,5 +6,5 @@ public class RoleConfig
     public List<LevelRoleReward> LevelRoles { get; set; } = new();
 
     [BsonElement("autoRoleId")]
-    public ulong AutoRoleId { get; set; }
+    public ulong? AutoRoleId { get; set; }
 }

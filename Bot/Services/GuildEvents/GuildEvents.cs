@@ -24,7 +24,10 @@ public class GuildEvents
         if (config?.Welcome == null || !config.Welcome.Enabled)
             return;
 
-        var channel = user.Guild.GetTextChannel(config.Welcome.ChannelId);
+        if (!config.Welcome.ChannelId.HasValue)
+            return;
+
+        var channel = user.Guild.GetTextChannel(config.Welcome.ChannelId.Value);
 
         if (channel == null)
             return;
@@ -38,12 +41,13 @@ public class GuildEvents
 
         var roleId = config.Roles.AutoRoleId;
 
-        if (roleId != 0)
+        if (config?.Roles?.AutoRoleId.HasValue == true)
         {
-            var role = user.Guild.GetRole(roleId);
-
+            var role = user.Guild.GetRole(config.Roles.AutoRoleId.Value);
             if (role != null)
+            {
                 await user.AddRoleAsync(role);
+            }
         }
     }
 
@@ -54,7 +58,10 @@ public class GuildEvents
         if (config?.Leave == null || !config.Leave.Enabled)
             return;
 
-        var channel = guild.GetTextChannel(config.Leave.ChannelId);
+        if (!config.Leave.ChannelId.HasValue)
+            return;
+
+        var channel = guild.GetTextChannel(config.Leave.ChannelId.Value);
 
         if (channel == null)
             return;

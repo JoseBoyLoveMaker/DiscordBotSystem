@@ -9,7 +9,6 @@ public class UserService
         _users = handler.GuildUsers;
     }
 
-    // Obtém um usuário por guild + user
     public async Task<GuildUserData?> GetUser(ulong guildId, ulong userId)
     {
         return await _users
@@ -17,13 +16,23 @@ public class UserService
             .FirstOrDefaultAsync();
     }
 
-    // Cria ou obtém usuário existente
     public async Task<GuildUserData> GetOrCreateUser(ulong guildId, ulong userId, string userName = "")
     {
         var user = await GetUser(guildId, userId);
 
         if (user != null)
+        {
+            if (!string.IsNullOrWhiteSpace(userName) && user.UserName != userName)
+            {
+                var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
+                var update = Builders<GuildUserData>.Update.Set(x => x.UserName, userName);
+
+                await _users.UpdateOneAsync(filter, update);
+                user.UserName = userName;
+            }
+
             return user;
+        }
 
         user = new GuildUserData
         {
@@ -40,14 +49,11 @@ public class UserService
         return user;
     }
 
-    // Adiciona XP de chat e retorna true se subiu de nível
-    public async Task<bool> AddChatXp(ulong guildId, ulong userId, int xp)
+    public async Task<bool> AddChatXp(ulong guildId, ulong userId, string userName, int xp)
     {
-        var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
-        var user = await _users.Find(filter).FirstOrDefaultAsync();
+        var user = await GetOrCreateUser(guildId, userId, userName);
 
-        if (user == null)
-            return false;
+        var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
 
         int newXp = user.ChatXp + xp;
         int oldLevel = user.ChatLevel;
@@ -56,6 +62,7 @@ public class UserService
         bool levelUp = newLevel > oldLevel;
 
         var update = Builders<GuildUserData>.Update
+            .Set(x => x.UserName, userName)
             .Set(x => x.ChatXp, newXp)
             .Set(x => x.ChatLevel, newLevel);
 
@@ -63,14 +70,11 @@ public class UserService
         return levelUp;
     }
 
-    // Adiciona XP de call e retorna true se subiu de nível
     public async Task<bool> AddCallXp(ulong guildId, ulong userId, string userName, int xp)
     {
-        var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
-        var user = await _users.Find(filter).FirstOrDefaultAsync();
+        var user = await GetOrCreateUser(guildId, userId, userName);
 
-        if (user == null)
-            return false;
+        var filter = Builders<GuildUserData>.Filter.Where(x => x.GuildId == guildId && x.UserId == userId);
 
         int newXp = user.CallXp + xp;
         int oldLevel = user.CallLevel;
@@ -79,6 +83,7 @@ public class UserService
         bool levelUp = newLevel > oldLevel;
 
         var update = Builders<GuildUserData>.Update
+            .Set(x => x.UserName, userName)
             .Set(x => x.CallXp, newXp)
             .Set(x => x.CallLevel, newLevel);
 
@@ -86,7 +91,6 @@ public class UserService
         return levelUp;
     }
 
-    // Top de chat por servidor
     public async Task<List<GuildUserData>> GetTopChat(ulong guildId, int page, int pageSize)
     {
         return await _users
@@ -97,7 +101,6 @@ public class UserService
             .ToListAsync();
     }
 
-    // Top de call por servidor
     public async Task<List<GuildUserData>> GetTopCall(ulong guildId, int page, int pageSize)
     {
         return await _users
@@ -108,7 +111,6 @@ public class UserService
             .ToListAsync();
     }
 
-    // Posição no ranking de chat por servidor
     public async Task<int> GetChatPosition(ulong guildId, ulong userId)
     {
         var user = await GetUser(guildId, userId);
@@ -118,7 +120,6 @@ public class UserService
         return (int)count + 1;
     }
 
-    // Posição no ranking de call por servidor
     public async Task<int> GetCallPosition(ulong guildId, ulong userId)
     {
         var user = await GetUser(guildId, userId);
@@ -128,7 +129,6 @@ public class UserService
         return (int)count + 1;
     }
 
-    // Cálculo de nível
     public int CalculateLevel(int totalXp)
     {
         int level = 0;
