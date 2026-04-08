@@ -1,6 +1,6 @@
 # 🚀 Discord Bot System
 
-Sistema completo de bot para Discord com painel web e API, focado em gerenciamento de servidores (guilds), automações e experiência do usuário.
+Sistema full-stack completo com Bot Discord + API + Painel Web
 
 ## 🎬 Demonstração
 
@@ -48,6 +48,20 @@ O objetivo é permitir que administradores de servidores configurem funcionalida
   - Cargos
   - Respostas
 - Integração com API
+
+### 💡 Diferenciais
+
+- Sistema multi-servidor (guild-based)
+- Arquitetura modular (Bot + API + Painel)
+- Integração completa com MongoDB
+- Painel web para configuração em tempo real
+
+## 🧠 Desafios técnicos resolvidos
+
+- Sistema de XP com cálculo por atividade
+- Sincronização de dados por servidor
+- Persistência com MongoDB
+- Estrutura escalável para múltiplas guilds
 
 ---
 
@@ -104,6 +118,7 @@ DiscordBotSystem/
 
 ---
 
+---
 ### 🔐 Configuração
 
 1. Clone o repositório:
@@ -124,9 +139,169 @@ Configure o arquivo appsettings.json:
 cd API
 dotnet run
 
+
 cd Bot
 dotnet run
 
 abrir index.html
 
 Desenvolvido por Emanuel Bernardo
+```
+---
+## 🌎 English version
+
+# 🚀 Discord Bot System
+
+Full-stack system with Discord Bot + API + Web Dashboard
+
+---
+
+## 🎬 Demo
+
+[![Watch the video](https://img.youtube.com/vi/VoGqOUcDinc/0.jpg)](https://www.youtube.com/watch?v=VoGqOUcDinc)
+
+---
+
+## 📌 About the project
+
+This project is a full-stack system composed of:
+
+- 🤖 Discord Bot  
+- 🌐 ASP.NET API  
+- 🖥️ Web Dashboard  
+- 🗄️ MongoDB Database  
+
+The goal is to allow server administrators to configure features such as XP, levels, automated messages, roles, and custom responses in a simple and centralized way.
+
+---
+
+## 🧠 Features
+
+### 🎮 XP and leveling system
+- XP from messages and voice activity  
+- Levels separated per server  
+- Ranking system (top users)  
+
+### 👋 Moderation and automation
+- Welcome and leave messages  
+- Auto role on join  
+- Level-based roles (chat and voice)  
+
+### 💬 Custom response system
+- Custom triggers  
+- Dynamic responses  
+- Per-server configuration  
+
+### ⚙️ Guild-based configuration (multi-server)
+- Each server has its own configuration  
+- Full data isolation  
+
+### 🌐 Web Dashboard
+- Interface to manage:
+  - Welcome/leave messages  
+  - Roles  
+  - Responses  
+- API integration  
+
+---
+
+## 💡 Highlights
+
+- Multi-server system (guild-based)  
+- Modular architecture (Bot + API + Dashboard)  
+- Full MongoDB integration  
+- Real-time configuration via web panel  
+
+---
+
+## 🧠 Technical challenges solved
+
+- XP system with activity-based calculation  
+- Per-server data synchronization  
+- MongoDB data persistence  
+- Scalable structure for multiple guilds  
+
+---
+
+## 🏗️ Architecture
+
+The project is divided into multiple modules:
+
+
+DiscordBotSystem/
+│
+├── Bot/ # Discord bot (events, commands)
+├── API/ # ASP.NET backend
+├── PainelWeb/ # Frontend dashboard
+├── docs/ # Documentation and assets
+
+
+### 🔧 Backend (API)
+- ASP.NET Core  
+- MongoDB  
+- Layered structure:
+  - Controllers  
+  - Services  
+  - DTOs  
+
+### 🤖 Bot
+- Discord.Net  
+- Events:
+  - UserJoined  
+  - MessageReceived  
+  - VoiceStateUpdated  
+
+### 🌐 Frontend
+- HTML, CSS, JavaScript  
+- REST API communication  
+
+---
+
+## 🛠️ Technologies
+
+- C#  
+- ASP.NET Core  
+- MongoDB  
+- JavaScript  
+- HTML / CSS  
+- Discord.Net  
+
+---
+
+## ⚙️ Running the project
+
+### 📌 Requirements
+- .NET 7+  
+- MongoDB (local or Atlas)  
+- Node.js (optional, for frontend build)  
+- Discord account  
+
+---
+
+### 🔐 Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/your-username/DiscordBotSystem.git
+Configure appsettings.json:
+{
+  "MongoSettings": {
+    "ConnectionString": "YOUR_CONNECTION_STRING",
+    "DatabaseName": "DATABASE_NAME"
+  },
+  "Discord": {
+    "Token": "YOUR_TOKEN"
+  }
+}
+▶️ Run API
+cd API
+dotnet run
+▶️ Run Bot
+cd Bot
+dotnet run
+▶️ Run Dashboard
+
+Open index.html or use a local server.
+
+Developed by Emanuel Bernardo
+```
