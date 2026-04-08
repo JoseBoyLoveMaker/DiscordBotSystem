@@ -4,7 +4,7 @@ Sistema full-stack completo com Bot Discord + API + Painel Web
 
 ## 🎬 Demonstração
 
-[![Assista ao vídeo] (https://www.youtube.com/watch?v=VoGqOUcDinc)
+[![Watch the video](https://img.youtube.com/vi/VoGqOUcDinc/0.jpg)](https://www.youtube.com/watch?v=VoGqOUcDinc)
 
 ---
 
