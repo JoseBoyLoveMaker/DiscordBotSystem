@@ -2,6 +2,10 @@
 
 Sistema completo de bot para Discord com painel web e API, focado em gerenciamento de servidores (guilds), automações e experiência do usuário.
 
+## 🎬 Demonstração
+
+[![Assista ao vídeo] (https://www.youtube.com/watch?v=VoGqOUcDinc)
+
 ---
 
 ## 📌 Sobre o projeto
